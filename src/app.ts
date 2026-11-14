@@ -13,6 +13,7 @@ import { Operations, type Intent } from "./operations.js";
 import { InviteLimiter } from "./invite-limiter.js";
 import { Discovery } from "./discovery.js";
 import { profileInput, skillTag, teamProfileInput } from "./profiles.js";
+import { Suggestions } from "./ranking.js";
 import { randomUUID } from "node:crypto";
 import type { Logger } from "pino";
 
@@ -82,6 +83,7 @@ export function createApp(options?: Dependencies) {
   );
   const operations = new Operations(options.db, options.client, options.logger);
   const discovery = new Discovery(options.db, operations);
+  const suggestions = new Suggestions(options.db, options.client);
   app.get("/health/ready", async (_request, response) => {
     if (options.isReady && !options.isReady()) {
       response.status(503).json({ status: "unavailable" });
@@ -298,6 +300,31 @@ export function createApp(options?: Dependencies) {
         intent(request, actor),
         z.uuid().parse(request.params.teamId),
         teamProfileInput.parse(request.body),
+      );
+      response.status(reply.status).json(reply.body);
+    }),
+  );
+  app.get(
+    "/api/events/:eventId/teammate-suggestions",
+    authenticated(async (request, response, actor) => {
+      const size = z
+        .string()
+        .regex(/^\d{1,2}$/)
+        .transform(Number)
+        .pipe(z.number().min(1).max(25));
+      const query = z
+        .strictObject({
+          limit: size.default(10),
+          unrankedLimit: size.default(10),
+          unrankedAfter: z
+            .string()
+            .regex(/^[A-Za-z0-9_-]{1,128}$/)
+            .optional(),
+        })
+        .parse(request.query);
+      const reply = await suggestions.get(
+        { eventId: z.uuid().parse(request.params.eventId), actorId: actor.id },
+        query,
       );
       response.status(reply.status).json(reply.body);
     }),

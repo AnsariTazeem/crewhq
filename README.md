@@ -1,16 +1,16 @@
 # Team Formation API
 
-A TypeScript service for event-based team formation. Participants create teams, invite teammates, apply to teams and discover event participants.
+A TypeScript service for event-based team formation. Participants create teams, invite teammates, apply to teams and discover people with complementary skills.
 
 ## Features
 
 - Transactional membership with team-size limits and one team per participant per event.
 - Expiring shared invitations and recipient-bound return invitations for removed members.
 - Leader-managed join requests, member removal and explicit leadership succession.
-- Event profiles and filtered people/team discovery.
+- Event profiles, filtered discovery and explained skill/time-zone suggestions.
 - Durable operation receipts, attributable audit records and protected private views.
 
-Teammate ranking, live transport, the browser interface, the full seed dataset and hosted load-test results are not included. Google OAuth needs provider configuration and end-to-end verification. Local tests do not establish hosted performance or production readiness.
+Live transport, the browser interface, the full seed dataset and hosted load-test results are not included. Google OAuth needs provider configuration and end-to-end verification. Local tests do not establish hosted performance or production readiness.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ npm run build
 npm test
 ```
 
-The suite uses signed test sessions and real MongoDB transactions. It covers permissions, request/roster lifecycles, retry recovery, rollback and concurrency. The last-seat test releases 50 eligible contenders and checks one persisted admission, 49 capacity rejections and matching state/audit/receipts.
+The suite uses signed test sessions and real MongoDB transactions. It covers permissions, request/roster lifecycles, retry recovery, rollback, ranking and concurrency. The last-seat test releases 50 eligible contenders and checks one persisted admission, 49 capacity rejections and matching state/audit/receipts.
 
 An ephemeral fault-injection database runs separately on `127.0.0.1:27028`. Only that test service enables database test commands. Run a single fault suite at a time, and never deploy the test override. Generated results stay in ignored `test-results/`.
 
