@@ -1074,6 +1074,41 @@ export class Membership {
     };
   }
 
+  private async memberSummary(team: Team, actorId: string) {
+    const summary = this.summary(team, actorId);
+    if (!team.members.includes(actorId)) return summary;
+    const people = await this.people
+      .find(
+        {
+          eventId: team.eventId,
+          teamId: team._id,
+          userId: { $in: team.members },
+        },
+        {
+          projection: { userId: 1, displayName: 1, "profile.displayName": 1 },
+          readConcern: { level: "majority" },
+          maxTimeMS: 1_500,
+        },
+      )
+      .limit(20)
+      .toArray();
+    const current = await currentTeam(this.db, team.eventId, team._id);
+    if (
+      !current ||
+      current.revision !== team.revision ||
+      !current.members.includes(actorId)
+    )
+      return null;
+    return {
+      ...summary,
+      roster: people.map((person) => ({
+        id: person.userId,
+        displayName:
+          person.profile?.displayName ?? person.displayName ?? "Participant",
+      })),
+    };
+  }
+
   async getMine(scope: EventActor): Promise<CommandReply> {
     const person = await currentPerson(this.db, scope);
     if (!person) return { status: 403, body: { code: "NOT_ENROLLED" } };
@@ -1093,12 +1128,14 @@ export class Membership {
       !team.members.includes(scope.actorId)
     )
       return { status: 409, body: { code: "TEAM_CHANGED" } };
+    const summary = await this.memberSummary(team, scope.actorId);
+    if (!summary) return { status: 409, body: { code: "TEAM_CHANGED" } };
     return {
       status: 200,
       body: {
         eventId: scope.eventId,
         participantId: scope.actorId,
-        team: this.summary(team, scope.actorId),
+        team: summary,
       },
     };
   }
@@ -1109,7 +1146,10 @@ export class Membership {
     const team = await currentTeam(this.db, scope.eventId, teamId);
     if (!team || team.state !== "active")
       return { status: 404, body: { code: "TEAM_NOT_FOUND" } };
-    return { status: 200, body: this.summary(team, scope.actorId) };
+    const summary = await this.memberSummary(team, scope.actorId);
+    return summary
+      ? { status: 200, body: summary }
+      : { status: 409, body: { code: "TEAM_CHANGED" } };
   }
 
   async getHistory(

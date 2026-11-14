@@ -18,6 +18,7 @@ export async function createTestHarness(
     monitorCommands?: boolean;
     live?: boolean;
     diagnostics?: boolean;
+    webDirectory?: string;
   } = {},
 ) {
   const appName = `h4h-test-${randomUUID()}`;
@@ -84,6 +85,7 @@ export async function createTestHarness(
     client,
     origin,
     invitationKey,
+    ...(settings.webDirectory ? { webDirectory: settings.webDirectory } : {}),
     ...(live ? { live } : {}),
     ...(settings.diagnostics || process.env.TEST_DIAGNOSTICS === "1"
       ? { logger: pino({ level: "warn", base: null }) }

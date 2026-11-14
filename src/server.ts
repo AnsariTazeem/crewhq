@@ -8,6 +8,7 @@ import { loadConfig } from "./config.js";
 import { ensureDatabaseReady } from "./database.js";
 import type { Event } from "./membership.js";
 import { LiveSource } from "./live-source.js";
+import path from "node:path";
 
 const logger = pino({
   level: "info",
@@ -115,6 +116,7 @@ try {
     origin: config.APP_ORIGIN,
     invitationKey: config.INVITATION_ENCRYPTION_KEY,
     live,
+    webDirectory: path.resolve("dist/web"),
     logger,
     isReady: () => ready,
   });

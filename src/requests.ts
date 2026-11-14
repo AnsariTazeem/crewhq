@@ -113,6 +113,13 @@ export async function requestPage(
         id: "$_id",
         teamId: 1,
         applicantId: 1,
+        applicantName: {
+          $ifNull: [
+            "$person.profile.displayName",
+            { $ifNull: ["$person.displayName", "Participant"] },
+          ],
+        },
+        teamName: "$team.name",
         status: 1,
         reason: 1,
         at: 1,
