@@ -11,6 +11,8 @@ import type { AuthHttp } from "./auth.js";
 import { Membership } from "./membership.js";
 import { Operations, type Intent } from "./operations.js";
 import { InviteLimiter } from "./invite-limiter.js";
+import { Discovery } from "./discovery.js";
+import { profileInput, skillTag, teamProfileInput } from "./profiles.js";
 import { randomUUID } from "node:crypto";
 import type { Logger } from "pino";
 
@@ -79,6 +81,7 @@ export function createApp(options?: Dependencies) {
     options.invitationKey,
   );
   const operations = new Operations(options.db, options.client, options.logger);
+  const discovery = new Discovery(options.db, operations);
   app.get("/health/ready", async (_request, response) => {
     if (options.isReady && !options.isReady()) {
       response.status(503).json({ status: "unavailable" });
@@ -237,6 +240,65 @@ export function createApp(options?: Dependencies) {
     authenticated(async (request, response, actor) => {
       z.strictObject({}).parse(request.body);
       const reply = await membership.enroll(intent(request, actor), actor.name);
+      response.status(reply.status).json(reply.body);
+    }),
+  );
+  app.get(
+    "/api/events/:eventId/profile",
+    authenticated(async (request, response, actor) => {
+      z.strictObject({}).parse(request.query);
+      const reply = await discovery.getProfile({
+        eventId: z.uuid().parse(request.params.eventId),
+        actorId: actor.id,
+      });
+      response.status(reply.status).json(reply.body);
+    }),
+  );
+  app.post(
+    "/api/events/:eventId/profile",
+    authenticated(async (request, response, actor) => {
+      const reply = await discovery.saveProfile(
+        intent(request, actor),
+        profileInput.parse(request.body),
+      );
+      response.status(reply.status).json(reply.body);
+    }),
+  );
+  app.get(
+    "/api/events/:eventId/board",
+    authenticated(async (request, response, actor) => {
+      const query = z
+        .strictObject({
+          kind: z.enum(["people", "teams"]).default("people"),
+          limit: z
+            .string()
+            .regex(/^\d{1,2}$/)
+            .transform(Number)
+            .pipe(z.number().min(1).max(50))
+            .default(20),
+          after: z
+            .string()
+            .regex(/^[A-Za-z0-9_-]{1,128}$/)
+            .optional(),
+          skill: skillTag.optional(),
+          search: z.string().trim().min(1).max(80).optional(),
+        })
+        .parse(request.query);
+      const reply = await discovery.board(
+        { eventId: z.uuid().parse(request.params.eventId), actorId: actor.id },
+        query,
+      );
+      response.status(reply.status).json(reply.body);
+    }),
+  );
+  app.post(
+    "/api/events/:eventId/teams/:teamId/profile",
+    authenticated(async (request, response, actor) => {
+      const reply = await membership.saveTeamProfile(
+        intent(request, actor),
+        z.uuid().parse(request.params.teamId),
+        teamProfileInput.parse(request.body),
+      );
       response.status(reply.status).json(reply.body);
     }),
   );

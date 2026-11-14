@@ -1,15 +1,16 @@
 # Team Formation API
 
-A TypeScript service for event-based team formation. Participants create teams, invite teammates and apply to teams.
+A TypeScript service for event-based team formation. Participants create teams, invite teammates, apply to teams and discover event participants.
 
 ## Features
 
 - Transactional membership with team-size limits and one team per participant per event.
 - Expiring shared invitations and recipient-bound return invitations for removed members.
 - Leader-managed join requests, member removal and explicit leadership succession.
+- Event profiles and filtered people/team discovery.
 - Durable operation receipts, attributable audit records and protected private views.
 
-Participant discovery, teammate ranking, live transport, the browser interface, the full seed dataset and hosted load-test results are not included. Google OAuth needs provider configuration and end-to-end verification. Local tests do not establish hosted performance or production readiness.
+Teammate ranking, live transport, the browser interface, the full seed dataset and hosted load-test results are not included. Google OAuth needs provider configuration and end-to-end verification. Local tests do not establish hosted performance or production readiness.
 
 ## Requirements
 
