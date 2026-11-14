@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { createServer } from "node:http";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { createTestHarness } from "./support/harness.js";
@@ -115,7 +115,18 @@ test("startup rejects an invalid ranking date range before listening", async () 
 }, 15_000);
 
 test("startup refuses to replace the configured dates of an existing event", async () => {
+  const eventId = randomUUID();
+  await harness.db.collection<Event>("events").insertOne({
+    _id: eventId,
+    name: "Team formation demo",
+    minSize: 2,
+    maxSize: 4,
+    admissionClosesAt: new Date("2030-01-01T00:00:00.000Z"),
+    startsAt: new Date("2030-01-02T00:00:00.000Z"),
+    endsAt: new Date("2030-01-03T00:00:00.000Z"),
+  });
   const instance = start(12345, {
+    DEMO_EVENT_ID: eventId,
     DEMO_EVENT_STARTS_AT: "2030-01-04T00:00:00.000Z",
     DEMO_EVENT_ENDS_AT: "2030-01-05T00:00:00.000Z",
   });
@@ -127,9 +138,7 @@ test("startup refuses to replace the configured dates of an existing event", asy
     expect(instance.output()).toContain("startup failed");
     expect(instance.output()).not.toContain("core API listening");
     expect(
-      await harness.db
-        .collection<Event>("events")
-        .findOne({ name: "Team formation demo" }),
+      await harness.db.collection<Event>("events").findOne({ _id: eventId }),
     ).toMatchObject({
       startsAt: new Date("2030-01-02T00:00:00.000Z"),
       endsAt: new Date("2030-01-03T00:00:00.000Z"),
