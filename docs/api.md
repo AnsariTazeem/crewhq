@@ -20,9 +20,9 @@ All routes below are under `/api`. Authentication-provider routes under `/api/au
 | POST | `/events/:eventId/teams/:teamId/requests` | Eligible unteamed participant applies, `{}`. |
 | GET | `/events/:eventId/requests` | Applicant's own request statuses. |
 | GET | `/events/:eventId/teams/:teamId/requests` | Current leader's private request queue. |
-| POST | `/events/:eventId/teams/:teamId/requests/:requestId/accept` | Current leader accepts. |
-| POST | `/events/:eventId/teams/:teamId/requests/:requestId/decline` | Current leader declines. |
-| POST | `/events/:eventId/teams/:teamId/requests/:requestId/withdraw` | Applicant withdraws. |
+| POST | `/events/:eventId/teams/:teamId/requests/:requestId/accept` | Current leader accepts, `{}`. |
+| POST | `/events/:eventId/teams/:teamId/requests/:requestId/decline` | Current leader declines, `{}`. |
+| POST | `/events/:eventId/teams/:teamId/requests/:requestId/withdraw` | Applicant withdraws, `{}`. |
 | POST | `/events/:eventId/teams/:teamId/members/:userId/remove` | Current leader removes another member. |
 | POST | `/events/:eventId/teams/:teamId/leave` | Leave; a leader with remaining members supplies `successorId`. |
 | GET | `/events/:eventId/teams/:teamId/history` | Current members read permitted change history. |
