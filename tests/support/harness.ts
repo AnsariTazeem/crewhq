@@ -7,11 +7,18 @@ import { createApp } from "../../src/app.js";
 import { authOptions } from "../../src/auth.js";
 import { ensureDatabaseReady } from "../../src/database.js";
 import type { Event } from "../../src/membership.js";
+import { LiveSource } from "../../src/live-source.js";
+import pino from "pino";
 
 export const origin = "http://localhost:3000";
 
 export async function createTestHarness(
-  settings: { mongoUri?: string; monitorCommands?: boolean } = {},
+  settings: {
+    mongoUri?: string;
+    monitorCommands?: boolean;
+    live?: boolean;
+    diagnostics?: boolean;
+  } = {},
 ) {
   const appName = `h4h-test-${randomUUID()}`;
   const client = new MongoClient(
@@ -47,12 +54,40 @@ export async function createTestHarness(
   });
   await auth.$context;
   await ensureDatabaseReady(db, client, options);
+  const invitationKey = randomBytes(32).toString("base64url");
+  const observerClient = settings.live
+    ? new MongoClient(
+        settings.mongoUri ??
+          process.env.TEST_MONGODB_URI ??
+          "mongodb://127.0.0.1:27027/?replicaSet=rs0&directConnection=true",
+        {
+          appName: `${appName}-observer`,
+          maxPoolSize: 2,
+          serverSelectionTimeoutMS: 3_000,
+          socketTimeoutMS: 2_000,
+        },
+      )
+    : undefined;
+  const live = observerClient
+    ? new LiveSource(observerClient.db(db.databaseName), invitationKey, {
+        heartbeatMs: 100,
+        coalesceMs: 20,
+      })
+    : undefined;
+  if (live) {
+    await observerClient!.connect();
+    await live.start();
+  }
   const app = createApp({
     auth,
     db,
     client,
     origin,
-    invitationKey: randomBytes(32).toString("base64url"),
+    invitationKey,
+    ...(live ? { live } : {}),
+    ...(settings.diagnostics || process.env.TEST_DIAGNOSTICS === "1"
+      ? { logger: pino({ level: "warn", base: null }) }
+      : {}),
   });
   const command = (
     path: string,
@@ -73,6 +108,9 @@ export async function createTestHarness(
     db,
     client,
     auth,
+    live,
+    observerClient,
+    invitationKey,
     command,
     async team(eventId: string, leader: { cookie: string }, name = "Apex") {
       await command(`/api/events/${eventId}/enroll`, leader).expect(201);
@@ -126,6 +164,8 @@ export async function createTestHarness(
       };
     },
     async close() {
+      await live?.close();
+      await observerClient?.close();
       if (!db.databaseName.startsWith("h4h_test_"))
         throw new Error("Unsafe test cleanup target");
       await db.dropDatabase();
