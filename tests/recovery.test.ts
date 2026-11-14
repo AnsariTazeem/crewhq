@@ -1,16 +1,51 @@
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 import request from "supertest";
+import type { CommandStartedEvent } from "mongodb";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { createTestHarness, origin } from "./support/harness.js";
 import type { Person, Team } from "../src/membership.js";
 
 let harness: Awaited<ReturnType<typeof createTestHarness>>;
 beforeAll(async () => {
-  harness = await createTestHarness();
+  harness = await createTestHarness({ monitorCommands: true });
 });
 afterAll(async () => {
   await harness?.close();
+});
+
+test("replayed commands confirm their receipt with a majority read outside the transaction", async () => {
+  const eventId = await harness.event();
+  const actor = await harness.person("Durable retry owner");
+  await harness.command(`/api/events/${eventId}/enroll`, actor).expect(201);
+  const key = randomUUID();
+  const path = `/api/events/${eventId}/teams`;
+  const original = await harness
+    .command(path, actor, { name: "Durable team" }, key)
+    .expect(201);
+  const reads: CommandStartedEvent["command"][] = [];
+  const capture = (event: CommandStartedEvent) => {
+    if (event.command.find === "operations") reads.push(event.command);
+  };
+  harness.client.on("commandStarted", capture);
+  try {
+    const replay = await harness
+      .command(path, actor, { name: "Durable team" }, key)
+      .expect(201);
+    expect(replay.body).toEqual(original.body);
+    expect(
+      reads.some(
+        (command) =>
+          command.autocommit === undefined &&
+          command.readConcern?.level === "majority",
+      ),
+    ).toBe(true);
+    expect(
+      await harness.db.collection("teams").countDocuments({ eventId }),
+    ).toBe(1);
+  } finally {
+    harness.client.off("commandStarted", capture);
+  }
 });
 
 test("a lost create response is reconciled through its durable actor-owned receipt", async () => {
