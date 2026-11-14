@@ -4,6 +4,7 @@ import type { Intent, CommandReply } from "./operations.js";
 import { publicProfile, resolveNamedTimeZone } from "./profiles.js";
 import { currentPerson, currentTeam } from "./current-reads.js";
 import { boundedEventInterval } from "./event-dates.js";
+import type { ProjectionRead } from "./live-reads.js";
 
 type Scope = Pick<Intent, "actorId" | "eventId">;
 export type RankingQuery = {
@@ -150,12 +151,17 @@ export class Suggestions {
     private readonly db: Db,
     private readonly client: MongoClient,
   ) {}
-  async get(scope: Scope, query: RankingQuery): Promise<CommandReply> {
+  async get(
+    scope: Scope,
+    query: RankingQuery,
+    read?: ProjectionRead,
+  ): Promise<CommandReply> {
     const current = await currentPerson(this.db, scope);
     if (!current) return { status: 403, body: { code: "NOT_ENROLLED" } };
-    const session = this.client.startSession({ snapshot: true });
+    const session =
+      read?.session ?? this.client.startSession({ snapshot: true });
     try {
-      const options = {
+      const options = read ?? {
         session,
         readConcern: { level: "snapshot" as const },
         maxTimeMS: 1_500,
@@ -300,7 +306,7 @@ export class Suggestions {
         },
       };
     } finally {
-      await session.endSession();
+      if (!read) await session.endSession();
     }
   }
 }

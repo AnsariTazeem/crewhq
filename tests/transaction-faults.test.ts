@@ -13,18 +13,7 @@ import { createTestHarness } from "./support/harness.js";
 import type { Person } from "../src/membership.js";
 
 let harness: Awaited<ReturnType<typeof createTestHarness>>;
-const faultUri =
-  process.env.FAULT_MONGODB_URI ??
-  "mongodb://127.0.0.1:27028/?replicaSet=rs0&directConnection=true";
-const faultAddress = new URL(faultUri);
-if (
-  !["127.0.0.1", "localhost"].includes(faultAddress.hostname) ||
-  faultAddress.port !== "27028"
-) {
-  throw new Error(
-    "Fault commands are restricted to the isolated loopback test service on port 27028",
-  );
-}
+import { faultMongoUri as faultUri } from "./support/fault-service.js";
 let control: MongoClient;
 beforeAll(async () => {
   control = await new MongoClient(faultUri, {

@@ -1,4 +1,5 @@
 import type { Db, Document } from "mongodb";
+import type { ProjectionRead } from "./live-reads.js";
 
 export type JoinRequest = {
   _id: string;
@@ -22,6 +23,7 @@ export async function requestPage(
     after?: string | undefined;
     state: "all" | "pending";
   },
+  read?: ProjectionRead,
 ) {
   const pipeline: Document[] = [
     {
@@ -126,7 +128,10 @@ export async function requestPage(
       applicantId: string;
       status: string;
       at: Date;
-    }>(pipeline, { readConcern: { level: "snapshot" }, maxTimeMS: 1_500 })
+    }>(
+      pipeline,
+      read ?? { readConcern: { level: "snapshot" }, maxTimeMS: 1_500 },
+    )
     .toArray();
   const page = items.slice(0, options.limit);
   return {

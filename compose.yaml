@@ -13,9 +13,10 @@ services:
         - >-
           mongosh --quiet --eval
           'try { rs.status(); } catch(e) { if(e.code === 94) rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]}); else throw e; } quit(db.hello().isWritablePrimary ? 0 : 1);'
-      interval: 3s
+      interval: 30s
+      start_interval: 1s
       timeout: 5s
       retries: 30
-      start_period: 5s
+      start_period: 10s
 volumes:
   mongo-data:

@@ -7,6 +7,7 @@ import { authOptions } from "./auth.js";
 import { loadConfig } from "./config.js";
 import { ensureDatabaseReady } from "./database.js";
 import type { Event } from "./membership.js";
+import { LiveSource } from "./live-source.js";
 
 const logger = pino({
   level: "info",
@@ -20,6 +21,19 @@ const logger = pino({
   ],
 });
 let client: MongoClient | undefined;
+let observerClient: MongoClient | undefined;
+let live: LiveSource | undefined;
+async function closeResources() {
+  const results = await Promise.allSettled([
+    live?.close(),
+    observerClient?.close(),
+    client?.close(),
+  ]);
+  if (results.some((result) => result.status === "rejected")) {
+    logger.warn("resource cleanup did not complete successfully");
+    process.exitCode = 1;
+  }
+}
 try {
   const config = loadConfig(process.env);
   client = new MongoClient(config.MONGODB_URI, {
@@ -78,6 +92,21 @@ try {
     },
     { upsert: true },
   );
+  observerClient = new MongoClient(config.MONGODB_URI, {
+    appName: "crewhq-live-observer",
+    maxPoolSize: 2,
+    serverSelectionTimeoutMS: 3_000,
+    socketTimeoutMS: 2_000,
+    waitQueueTimeoutMS: 2_000,
+    readPreference: "primary",
+  });
+  await observerClient.connect();
+  live = new LiveSource(
+    observerClient.db(config.MONGODB_DATABASE),
+    config.INVITATION_ENCRYPTION_KEY,
+    { logger },
+  );
+  await live.start();
   let ready = true;
   const app = createApp({
     db,
@@ -85,6 +114,7 @@ try {
     auth,
     origin: config.APP_ORIGIN,
     invitationKey: config.INVITATION_ENCRYPTION_KEY,
+    live,
     logger,
     isReady: () => ready,
   });
@@ -98,7 +128,7 @@ try {
         },
         "HTTP listen failed",
       );
-      void client?.close().finally(() => {
+      void closeResources().finally(() => {
         process.exitCode = 1;
       });
       return;
@@ -115,15 +145,16 @@ try {
     stopping = true;
     ready = false;
     logger.info("draining HTTP requests");
+    void live?.close();
     const forced = setTimeout(() => {
       server.closeAllConnections();
-      void client?.close();
+      void closeResources();
       process.exitCode = 1;
     }, 10_000);
     forced.unref();
     server.close(() => {
       clearTimeout(forced);
-      void client?.close().then(() => logger.info("core API stopped"));
+      void closeResources().then(() => logger.info("core API stopped"));
     });
   };
   process.on("SIGTERM", shutdown);
@@ -138,6 +169,6 @@ try {
     },
     "startup failed; inspect configuration and database readiness",
   );
-  await client?.close();
+  await closeResources();
   process.exitCode = 1;
 }

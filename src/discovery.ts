@@ -10,6 +10,7 @@ import {
 } from "./operations.js";
 import { profileInput, publicProfile } from "./profiles.js";
 import { currentPerson } from "./current-reads.js";
+import type { ProjectionRead } from "./live-reads.js";
 
 type Scope = Pick<Intent, "actorId" | "eventId">;
 export type BoardQuery = {
@@ -37,12 +38,16 @@ export class Discovery {
     };
   }
 
-  async board(scope: Scope, query: BoardQuery): Promise<CommandReply> {
+  async board(
+    scope: Scope,
+    query: BoardQuery,
+    read?: ProjectionRead,
+  ): Promise<CommandReply> {
     if (!(await currentPerson(this.db, scope)))
       return { status: 403, body: { code: "NOT_ENROLLED" } };
     const event = await this.db
       .collection<Event>("events")
-      .findOne({ _id: scope.eventId }, { maxTimeMS: 1_500 });
+      .findOne({ _id: scope.eventId }, { ...read, maxTimeMS: 1_500 });
     if (!event) return { status: 404, body: { code: "EVENT_NOT_FOUND" } };
     const admissionsOpen = event.admissionClosesAt > new Date();
     const regex = query.search
@@ -72,6 +77,7 @@ export class Discovery {
               : {}),
           },
           {
+            ...read,
             projection: { userId: 1, displayName: 1, profile: 1 },
             maxTimeMS: 1_500,
           },
@@ -100,6 +106,7 @@ export class Discovery {
                 ...(regex ? { name: regex } : {}),
               },
               {
+                ...read,
                 projection: {
                   name: 1,
                   leaderId: 1,

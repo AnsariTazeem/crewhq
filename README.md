@@ -9,13 +9,14 @@ A TypeScript service for event-based team formation. Participants create teams, 
 - Leader-managed join requests, member removal and explicit leadership succession.
 - Event profiles, filtered discovery and explained skill/time-zone suggestions.
 - Durable operation receipts, attributable audit records and protected private views.
+- Authenticated live refresh hints, signed read frontiers and reset/reconnect recovery.
 
-Live transport, the browser interface, the full seed dataset and hosted load-test results are not included. Google OAuth needs provider configuration and end-to-end verification. Local tests do not establish hosted performance or production readiness.
+The browser interface, full seed dataset and hosted load-test results are not included. Google OAuth needs provider configuration and end-to-end verification. Hosted live delivery and browser recovery still need verification; local tests do not establish production readiness.
 
 ## Requirements
 
 - Node.js 24 and npm.
-- Docker with Linux containers for the development replica set.
+- Docker Engine 25.0 or later with Linux containers and Docker Compose 2.20.2 or later for the development replica set.
 - A Google OAuth web client for interactive sign-in.
 
 ## Setup
@@ -63,4 +64,5 @@ Use the same key and payload to retry an intent. A timeout is an unknown outcome
 - [API reference](docs/api.md)
 - [Architecture and invariants](docs/architecture.md)
 - [Testing and limitations](docs/testing.md)
+- [Live updates and freshness](docs/live-updates.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
