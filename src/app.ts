@@ -5,10 +5,16 @@ import express, {
 } from "express";
 import helmet from "helmet";
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
-import { MongoError, ObjectId, type Db, type MongoClient } from "mongodb";
+import {
+  MongoError,
+  MongoServerError,
+  ObjectId,
+  type Db,
+  type MongoClient,
+} from "mongodb";
 import { z, ZodError } from "zod";
 import type { AuthHttp } from "./auth.js";
-import { Membership } from "./membership.js";
+import { Membership, type HistoryCursor } from "./membership.js";
 import { Operations, type Intent } from "./operations.js";
 import { InviteLimiter } from "./invite-limiter.js";
 import { Discovery } from "./discovery.js";
@@ -16,8 +22,14 @@ import { profileInput, skillTag, teamProfileInput } from "./profiles.js";
 import { Suggestions } from "./ranking.js";
 import { randomUUID } from "node:crypto";
 import type { Logger } from "pino";
+import { LiveError, type LiveSource } from "./live-source.js";
+import { openLive } from "./live-http.js";
+import { currentPerson } from "./current-reads.js";
+import { LiveReads, type ProjectionRead } from "./live-reads.js";
+import type { CommandReply } from "./operations.js";
+import { RateLimiterMongo, RateLimiterRes } from "rate-limiter-flexible";
 
-type Actor = { id: string; name: string };
+type Actor = { id: string; name: string; expiresAt: Date };
 type Dependencies = {
   auth: AuthHttp;
   db: Db;
@@ -26,6 +38,7 @@ type Dependencies = {
   invitationKey: string;
   logger?: Logger;
   isReady?: () => boolean;
+  live?: LiveSource;
 };
 export class ApiError extends Error {
   constructor(
@@ -84,8 +97,74 @@ export function createApp(options?: Dependencies) {
   const operations = new Operations(options.db, options.client, options.logger);
   const discovery = new Discovery(options.db, operations);
   const suggestions = new Suggestions(options.db, options.client);
+  const liveAttempts = new RateLimiterMongo({
+    storeClient: options.client,
+    dbName: options.db.databaseName,
+    tableName: "rate_limits",
+    disableIndexesCreation: true,
+    keyPrefix: "live_connect",
+    points: 20,
+    duration: 60,
+  });
+  const liveReads = options.live
+    ? new LiveReads(options.db, options.client, options.live, options.logger)
+    : undefined;
+  const sharedBoards = new Map<
+    string,
+    Promise<Awaited<ReturnType<LiveReads["run"]>>>
+  >();
+  const project = async (
+    request: Request,
+    response: express.Response,
+    read: (context?: ProjectionRead) => Promise<CommandReply>,
+    publicBoard?: { key: string; actorId: string },
+  ) => {
+    const token = request.get("X-Read-Frontier");
+    const mode = z
+      .enum(["reset", "refresh"])
+      .default("reset")
+      .parse(request.get("X-Snapshot-Mode"));
+    if (mode === "refresh" && !token)
+      throw new LiveError("READ_FRONTIER_REQUIRED", 400);
+    if (!liveReads) {
+      if (token !== undefined) throw new LiveError("LIVE_SOURCE_UNAVAILABLE");
+      const reply = await read();
+      response.status(reply.status).json(reply.body);
+      return;
+    }
+    const eventId = z.uuid().parse(request.params.eventId);
+    const execute = () => liveReads.run(eventId, token, read);
+    let result;
+    if (publicBoard && mode === "refresh") {
+      // Authorization is per caller even when a safe public projection is shared.
+      if (
+        !(await currentPerson(options.db, {
+          eventId,
+          actorId: publicBoard.actorId,
+        }))
+      )
+        throw new ApiError(403, "NOT_ENROLLED");
+      const minimum = options.live!.minimum(eventId, token);
+      const key = `${eventId}:${minimum.frame.generation}:${minimum.at.toString()}:${publicBoard.key}`;
+      let pending = sharedBoards.get(key);
+      if (!pending && sharedBoards.size < 64) {
+        const shared = execute().finally(() => {
+          if (sharedBoards.get(key) === shared) sharedBoards.delete(key);
+        });
+        sharedBoards.set(key, shared);
+        pending = shared;
+      }
+      result = await (pending ?? execute());
+    } else result = await execute();
+    if (result.frame)
+      response.setHeader("X-Read-Frontier", result.frame.frontier);
+    response.status(result.reply.status).json(result.reply.body);
+  };
   app.get("/health/ready", async (_request, response) => {
-    if (options.isReady && !options.isReady()) {
+    if (
+      (options.isReady && !options.isReady()) ||
+      (options.live && !options.live.ready)
+    ) {
       response.status(503).json({ status: "unavailable" });
       return;
     }
@@ -116,6 +195,44 @@ export function createApp(options?: Dependencies) {
     }
     next();
   });
+  const identify = async (request: Request): Promise<Actor> => {
+    let identity;
+    try {
+      identity = await options.auth.api.getSession({
+        headers: fromNodeHeaders(request.headers),
+        query: { disableCookieCache: true },
+      });
+    } catch (error) {
+      options.logger?.warn(
+        { errorType: error instanceof Error ? error.name : "unknown" },
+        "identity lookup unavailable",
+      );
+      throw new ApiError(503, "IDENTITY_UNAVAILABLE");
+    }
+    if (!identity || !ObjectId.isValid(identity.session.id))
+      throw new ApiError(401, "UNAUTHENTICATED");
+    const current = await options.db.collection("session").findOne(
+      { _id: new ObjectId(identity.session.id) },
+      {
+        readConcern: { level: "linearizable" },
+        readPreference: "primary",
+        maxTimeMS: 1_000,
+      },
+    );
+    if (
+      !current ||
+      !(current.expiresAt instanceof Date) ||
+      !Number.isFinite(current.expiresAt.getTime()) ||
+      current.expiresAt <= new Date() ||
+      String(current.userId) !== identity.user.id
+    )
+      throw new ApiError(401, "UNAUTHENTICATED");
+    return {
+      id: identity.user.id,
+      name: identity.user.name,
+      expiresAt: current.expiresAt,
+    };
+  };
   const authenticated =
     (
       handler: (
@@ -125,40 +242,55 @@ export function createApp(options?: Dependencies) {
       ) => Promise<void>,
     ): RequestHandler =>
     async (request, response) => {
-      let identity;
-      try {
-        identity = await options.auth.api.getSession({
-          headers: fromNodeHeaders(request.headers),
-          query: { disableCookieCache: true },
-        });
-      } catch {
-        throw new ApiError(503, "IDENTITY_UNAVAILABLE");
-      }
-      if (!identity || !ObjectId.isValid(identity.session.id))
-        throw new ApiError(401, "UNAUTHENTICATED");
-      const current = await options.db.collection("session").findOne(
-        { _id: new ObjectId(identity.session.id) },
-        {
-          readConcern: { level: "linearizable" },
-          readPreference: "primary",
-          maxTimeMS: 1_000,
-        },
-      );
-      if (
-        !current ||
-        current.expiresAt <= new Date() ||
-        String(current.userId) !== identity.user.id
-      )
-        throw new ApiError(401, "UNAUTHENTICATED");
-      await handler(request, response, {
-        id: identity.user.id,
-        name: identity.user.name,
-      });
+      await handler(request, response, await identify(request));
     };
   app.get(
     "/api/me",
     authenticated(async (_request, response, actor) => {
-      response.json(actor);
+      response.json({ id: actor.id, name: actor.name });
+    }),
+  );
+  app.get(
+    "/api/events/:eventId/live",
+    authenticated(async (request, response, actor) => {
+      z.strictObject({}).parse(request.query);
+      const eventId = z.uuid().parse(request.params.eventId);
+      if (
+        (request.get("Origin") && request.get("Origin") !== options.origin) ||
+        request.get("Sec-Fetch-Site") === "cross-site"
+      )
+        throw new ApiError(403, "UNTRUSTED_ORIGIN");
+      const authorize = async () => {
+        const current = await identify(request);
+        if (
+          current.id !== actor.id ||
+          !(await currentPerson(options.db, { eventId, actorId: actor.id }))
+        )
+          throw new ApiError(403, "NOT_ENROLLED");
+      };
+      if (!(await currentPerson(options.db, { eventId, actorId: actor.id })))
+        throw new ApiError(403, "NOT_ENROLLED");
+      if (!options.live) throw new LiveError("LIVE_SOURCE_UNAVAILABLE");
+      try {
+        await liveAttempts.consume(actor.id);
+      } catch (error) {
+        if (error instanceof RateLimiterRes) {
+          response.setHeader(
+            "Retry-After",
+            Math.max(1, Math.ceil(error.msBeforeNext / 1_000)),
+          );
+          throw new LiveError("LIVE_CONNECTION_RATE_LIMIT", 429);
+        }
+        throw new LiveError("LIMITER_UNAVAILABLE");
+      }
+      openLive(
+        response,
+        options.live,
+        eventId,
+        actor.id,
+        actor.expiresAt,
+        authorize,
+      );
     }),
   );
   app.get(
@@ -176,22 +308,27 @@ export function createApp(options?: Dependencies) {
     "/api/events/:eventId/me",
     authenticated(async (request, response, actor) => {
       z.strictObject({}).parse(request.query);
-      const reply = await membership.getMine({
-        actorId: actor.id,
-        eventId: z.uuid().parse(request.params.eventId),
-      });
-      response.status(reply.status).json(reply.body);
+      await project(request, response, () =>
+        membership.getMine({
+          actorId: actor.id,
+          eventId: z.uuid().parse(request.params.eventId),
+        }),
+      );
     }),
   );
   app.get(
     "/api/events/:eventId/teams/:teamId",
     authenticated(async (request, response, actor) => {
       z.strictObject({}).parse(request.query);
-      const reply = await membership.getTeam(
-        { actorId: actor.id, eventId: z.uuid().parse(request.params.eventId) },
-        z.uuid().parse(request.params.teamId),
+      await project(request, response, () =>
+        membership.getTeam(
+          {
+            actorId: actor.id,
+            eventId: z.uuid().parse(request.params.eventId),
+          },
+          z.uuid().parse(request.params.teamId),
+        ),
       );
-      response.status(reply.status).json(reply.body);
     }),
   );
   app.get(
@@ -211,7 +348,7 @@ export function createApp(options?: Dependencies) {
             .optional(),
         })
         .parse(request.query);
-      let cursor;
+      let cursor: HistoryCursor | undefined;
       if (query.cursor) {
         let decoded: unknown;
         try {
@@ -228,13 +365,18 @@ export function createApp(options?: Dependencies) {
           })
           .parse(decoded);
       }
-      const reply = await membership.getHistory(
-        { actorId: actor.id, eventId: z.uuid().parse(request.params.eventId) },
-        z.uuid().parse(request.params.teamId),
-        query.limit,
-        cursor,
+      await project(request, response, (context) =>
+        membership.getHistory(
+          {
+            actorId: actor.id,
+            eventId: z.uuid().parse(request.params.eventId),
+          },
+          z.uuid().parse(request.params.teamId),
+          query.limit,
+          cursor,
+          context,
+        ),
       );
-      response.status(reply.status).json(reply.body);
     }),
   );
   app.post(
@@ -249,11 +391,12 @@ export function createApp(options?: Dependencies) {
     "/api/events/:eventId/profile",
     authenticated(async (request, response, actor) => {
       z.strictObject({}).parse(request.query);
-      const reply = await discovery.getProfile({
-        eventId: z.uuid().parse(request.params.eventId),
-        actorId: actor.id,
-      });
-      response.status(reply.status).json(reply.body);
+      await project(request, response, () =>
+        discovery.getProfile({
+          eventId: z.uuid().parse(request.params.eventId),
+          actorId: actor.id,
+        }),
+      );
     }),
   );
   app.post(
@@ -286,11 +429,20 @@ export function createApp(options?: Dependencies) {
           search: z.string().trim().min(1).max(80).optional(),
         })
         .parse(request.query);
-      const reply = await discovery.board(
-        { eventId: z.uuid().parse(request.params.eventId), actorId: actor.id },
-        query,
+      await project(
+        request,
+        response,
+        (context) =>
+          discovery.board(
+            {
+              eventId: z.uuid().parse(request.params.eventId),
+              actorId: actor.id,
+            },
+            query,
+            context,
+          ),
+        { key: JSON.stringify(query), actorId: actor.id },
       );
-      response.status(reply.status).json(reply.body);
     }),
   );
   app.post(
@@ -322,11 +474,16 @@ export function createApp(options?: Dependencies) {
             .optional(),
         })
         .parse(request.query);
-      const reply = await suggestions.get(
-        { eventId: z.uuid().parse(request.params.eventId), actorId: actor.id },
-        query,
+      await project(request, response, (context) =>
+        suggestions.get(
+          {
+            eventId: z.uuid().parse(request.params.eventId),
+            actorId: actor.id,
+          },
+          query,
+          context,
+        ),
       );
-      response.status(reply.status).json(reply.body);
     }),
   );
   const requestQuery = (request: Request, defaultState: "all" | "pending") =>
@@ -345,22 +502,35 @@ export function createApp(options?: Dependencies) {
   app.get(
     "/api/events/:eventId/requests",
     authenticated(async (request, response, actor) => {
-      const reply = await membership.getRequests(
-        { eventId: z.uuid().parse(request.params.eventId), actorId: actor.id },
-        requestQuery(request, "all"),
+      const query = requestQuery(request, "all");
+      await project(request, response, (context) =>
+        membership.getRequests(
+          {
+            eventId: z.uuid().parse(request.params.eventId),
+            actorId: actor.id,
+          },
+          query,
+          undefined,
+          context,
+        ),
       );
-      response.status(reply.status).json(reply.body);
     }),
   );
   app.get(
     "/api/events/:eventId/teams/:teamId/requests",
     authenticated(async (request, response, actor) => {
-      const reply = await membership.getRequests(
-        { eventId: z.uuid().parse(request.params.eventId), actorId: actor.id },
-        requestQuery(request, "pending"),
-        z.uuid().parse(request.params.teamId),
+      const query = requestQuery(request, "pending");
+      await project(request, response, (context) =>
+        membership.getRequests(
+          {
+            eventId: z.uuid().parse(request.params.eventId),
+            actorId: actor.id,
+          },
+          query,
+          z.uuid().parse(request.params.teamId),
+          context,
+        ),
       );
-      response.status(reply.status).json(reply.body);
     }),
   );
   app.post(
@@ -510,14 +680,17 @@ export function createApp(options?: Dependencies) {
         actorId: actor.id,
         eventId: z.uuid().parse(request.params.eventId),
       };
-      const reply = await membership.getInvitation(
-        scope,
-        z.uuid().parse(request.params.teamId),
-        z.uuid().parse(request.params.invitationId),
-      );
-      if (reply.status === 200 && typeof reply.body.code === "string")
-        reply.body.link = `${options.origin}/join#code=${reply.body.code}`;
-      response.status(reply.status).json(reply.body);
+      await project(request, response, async (context) => {
+        const reply = await membership.getInvitation(
+          scope,
+          z.uuid().parse(request.params.teamId),
+          z.uuid().parse(request.params.invitationId),
+          context,
+        );
+        if (reply.status === 200 && typeof reply.body.code === "string")
+          reply.body.link = `${options.origin}/join#code=${reply.body.code}`;
+        return reply;
+      });
     }),
   );
   app.use((_request, response) => {
@@ -529,7 +702,9 @@ export function createApp(options?: Dependencies) {
     response,
     _next,
   ) => {
-    if (error instanceof ApiError) {
+    if (error instanceof ApiError || error instanceof LiveError) {
+      if (error.status === 429 && !response.hasHeader("Retry-After"))
+        response.setHeader("Retry-After", 1);
       response.status(error.status).json({ code: error.code });
       return;
     }
@@ -558,6 +733,9 @@ export function createApp(options?: Dependencies) {
         requestId: response.getHeader("X-Request-Id"),
         errorType: error instanceof Error ? error.name : "unknown",
         ...(error instanceof MongoError ? { labels: error.errorLabels } : {}),
+        ...(error instanceof MongoServerError
+          ? { databaseCode: error.code }
+          : {}),
       },
       "HTTP request failed",
     );

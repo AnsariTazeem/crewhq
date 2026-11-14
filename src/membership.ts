@@ -5,6 +5,7 @@ import type { Logger } from "pino";
 import { requestPage, type JoinRequest } from "./requests.js";
 import type { ParticipantProfile, TeamProfileInput } from "./profiles.js";
 import { currentPerson, currentTeam } from "./current-reads.js";
+import type { ProjectionRead } from "./live-reads.js";
 import {
   Operations,
   committed,
@@ -741,10 +742,14 @@ export class Membership {
       state: "all" | "pending";
     },
     teamId?: string,
+    read?: ProjectionRead,
   ): Promise<CommandReply> {
     const person = await currentPerson(this.db, scope);
     if (!person) return { status: 403, body: { code: "NOT_ENROLLED" } };
-    const event = await this.events.findOne({ _id: scope.eventId });
+    const event = await this.events.findOne(
+      { _id: scope.eventId },
+      read ?? { maxTimeMS: 1_500 },
+    );
     if (!event) return { status: 404, body: { code: "EVENT_NOT_FOUND" } };
     const team = teamId
       ? await currentTeam(this.db, scope.eventId, teamId)
@@ -761,6 +766,7 @@ export class Membership {
       },
       event.admissionClosesAt,
       options,
+      read,
     );
     if (teamId) {
       const current = await currentTeam(this.db, scope.eventId, teamId);
@@ -1009,6 +1015,7 @@ export class Membership {
     scope: EventActor,
     teamId: string,
     invitationId: string,
+    read?: ProjectionRead,
   ): Promise<CommandReply> {
     const team = await currentTeam(this.db, scope.eventId, teamId);
     if (!team || team.state !== "active")
@@ -1019,13 +1026,16 @@ export class Membership {
     )
       return { status: 403, body: { code: "LEADER_REQUIRED" } };
     if (team.frozen) return { status: 409, body: { code: "ROSTER_FROZEN" } };
-    const invitation = await this.invitations.findOne({
-      _id: invitationId,
-      eventId: scope.eventId,
-      teamId,
-      revoked: false,
-      expiresAt: { $gt: new Date() },
-    });
+    const invitation = await this.invitations.findOne(
+      {
+        _id: invitationId,
+        eventId: scope.eventId,
+        teamId,
+        revoked: false,
+        expiresAt: { $gt: new Date() },
+      },
+      read ?? { maxTimeMS: 1_500 },
+    );
     if (!invitation) return { status: 404, body: { code: "INVITE_UNUSABLE" } };
     const code = await symmetricDecrypt({
       key: this.invitationKey,
@@ -1107,6 +1117,7 @@ export class Membership {
     teamId: string,
     limit: number,
     cursor?: HistoryCursor,
+    read?: ProjectionRead,
   ): Promise<CommandReply> {
     const team = await currentTeam(this.db, scope.eventId, teamId);
     if (!team || team.state !== "active")
@@ -1115,19 +1126,22 @@ export class Membership {
       return { status: 403, body: { code: "NOT_TEAM_MEMBER" } };
     const entries = await this.db
       .collection<Audit>("audit")
-      .find({
-        eventId: scope.eventId,
-        teamId,
-        private: { $ne: true },
-        ...(cursor
-          ? {
-              $or: [
-                { at: { $lt: cursor.at } },
-                { at: cursor.at, _id: { $lt: cursor.id } },
-              ],
-            }
-          : {}),
-      })
+      .find(
+        {
+          eventId: scope.eventId,
+          teamId,
+          private: { $ne: true },
+          ...(cursor
+            ? {
+                $or: [
+                  { at: { $lt: cursor.at } },
+                  { at: cursor.at, _id: { $lt: cursor.id } },
+                ],
+              }
+            : {}),
+        },
+        read ?? { maxTimeMS: 1_500 },
+      )
       .sort({ at: -1, _id: -1 })
       .limit(limit + 1)
       .toArray();
