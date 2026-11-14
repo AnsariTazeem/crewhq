@@ -2051,3 +2051,12 @@ code {
 .login-button:hover:not(:disabled) {
   background: transparent;
 }
+
+@media (max-width: 760px) {
+  .sidebar {
+    visibility: hidden;
+  }
+  .sidebar.is-open {
+    visibility: visible;
+  }
+}

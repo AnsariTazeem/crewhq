@@ -216,8 +216,10 @@ test("the phone layout supports navigation, keyboard focus and accessible dialog
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  await expect(
+    page.getByRole("button", { name: "Discover", exact: true }),
+  ).toBeHidden();
   await page.getByRole("button", { name: "Open navigation" }).press("Enter");
-  await page.getByRole("button", { name: "My profile", exact: true }).count();
   await page
     .getByRole("button", { name: "Suggestions", exact: true })
     .press("Enter");

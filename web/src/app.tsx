@@ -306,6 +306,7 @@ function WorkspaceContent({
     setView(next);
     setMobileNav(false);
     commands.clearNotice();
+    document.getElementById("main-content")?.focus();
   };
   return (
     <div className="app-shell">
@@ -318,6 +319,7 @@ function WorkspaceContent({
             className="icon-button mobile-toggle"
             aria-label={mobileNav ? "Close navigation" : "Open navigation"}
             aria-expanded={mobileNav}
+            aria-controls="workspace-navigation"
             onClick={() => setMobileNav(!mobileNav)}
           >
             {mobileNav ? <X size={21} /> : <Menu size={21} />}
@@ -348,6 +350,7 @@ function WorkspaceContent({
       <aside
         className={`sidebar ${mobileNav ? "is-open" : ""}`}
         aria-label="Workspace navigation"
+        id="workspace-navigation"
       >
         <div className="sidebar-upper">
           <span className="nav-label">WORKSPACE</span>
