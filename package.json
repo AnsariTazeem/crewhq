@@ -8,17 +8,20 @@
   },
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env --import tsx src/server.ts",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "npm run build:api && vite build --config web/vite.config.ts",
     "start": "node --env-file-if-exists=.env dist/server.js",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p web/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "setup:local": "node --import tsx scripts/init-local-env.ts",
-    "format:check": "prettier --check src tests scripts package.json tsconfig.json tsconfig.build.json vitest.config.ts",
-    "format": "prettier --write src tests scripts package.json tsconfig.json tsconfig.build.json vitest.config.ts",
+    "format:check": "prettier --check src tests scripts package.json tsconfig.json tsconfig.build.json vitest.config.ts web playwright.config.ts",
+    "format": "prettier --write src tests scripts package.json tsconfig.json tsconfig.build.json vitest.config.ts web playwright.config.ts",
     "db:up": "docker compose up -d --wait",
     "db:test:up": "docker compose -f compose.yaml -f compose.test.yaml --profile faults up -d --wait",
-    "db:down": "docker compose -f compose.yaml -f compose.test.yaml --profile faults down"
+    "db:down": "docker compose -f compose.yaml -f compose.test.yaml --profile faults down",
+    "dev:web": "vite --config web/vite.config.ts",
+    "build:api": "tsc -p tsconfig.build.json",
+    "test:browser": "npm run build && playwright test"
   },
   "dependencies": {
     "@better-auth/mongo-adapter": "1.7.23",
