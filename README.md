@@ -1,6 +1,6 @@
-# Team Formation API
+# CrewHQ
 
-A TypeScript service for event-based team formation. Participants create teams, invite teammates, apply to teams and discover people with complementary skills.
+A React and TypeScript workspace for event-based team formation. Find complementary skills, form a team and keep membership changes in sync.
 
 ## Features
 
@@ -10,8 +10,9 @@ A TypeScript service for event-based team formation. Participants create teams, 
 - Event profiles, filtered discovery and explained skill/time-zone suggestions.
 - Durable operation receipts, attributable audit records and protected private views.
 - Authenticated live refresh hints, signed read frontiers and reset/reconnect recovery.
+- Responsive participant, leader and team views with keyboard-operable dialogs and explicit invitation confirmation.
 
-The browser interface, full seed dataset and hosted load-test results are not included. Google OAuth needs provider configuration and end-to-end verification. Hosted live delivery and browser recovery still need verification; local tests do not establish production readiness.
+The full seed dataset and hosted load-test results are not included. Google OAuth needs provider configuration and end-to-end verification. Hosted streaming and proxy behavior remain unverified; local correctness and browser tests do not establish production readiness.
 
 ## Requirements
 
@@ -35,7 +36,11 @@ Configure the demo event's minimum/maximum size, admission close time and explic
 npm run dev
 ```
 
-The default origin is `http://localhost:3000`. Health endpoints are `/health/live` and `/health/ready`. For a compiled build, run `npm run build` followed by `npm start`.
+In a second terminal, run `npm run dev:web` and open `http://localhost:3000`. Development uses API port 3001 behind Vite's same-origin proxy. Set `PORT=3001` in an older `.env` file. Cookies, authentication callbacks and API mutations use the browser origin, not a separate cross-origin API.
+
+For a compiled build, run `npm run build`, then `npm start`. The API serves the built frontend from `dist/web` on its configured port. For a single-process local preview set `PORT=3000` to match `APP_ORIGIN`. Production requires an HTTPS origin and an appropriate port/binding for the hosting environment. Do not deploy the Vite development server. Health endpoints are `/health/live` and `/health/ready`.
+
+The default event ID matches the API configuration. A link can select an event with `?event=<UUID>`. For another default, set `VITE_EVENT_ID` when building the frontend; never put secrets in `VITE_*` variables. Invitations include the event ID and place the credential in a fragment, which the browser removes before explicit confirmation.
 
 The development database binds to `127.0.0.1:27027`. It is unauthenticated and intended only for isolated local use. `npm run db:down` stops containers while preserving the normal database volume.
 
@@ -47,9 +52,11 @@ npm run typecheck
 npm run format:check
 npm run build
 npm test
+npx playwright install chromium
+npm run test:browser
 ```
 
-The suite uses signed test sessions and real MongoDB transactions. It covers permissions, request/roster lifecycles, retry recovery, rollback, ranking and concurrency. The last-seat test releases 50 eligible contenders and checks one persisted admission, 49 capacity rejections and matching state/audit/receipts.
+The suite uses signed test sessions and real MongoDB transactions. It covers permissions, request/roster lifecycles, retry recovery, rollback, ranking and concurrency. The last-seat test releases 50 eligible contenders and checks one persisted admission, 49 capacity rejections and matching state/audit/receipts. Browser tests use compiled assets with isolated synthetic participants; their fixture login is confined to test code and is not part of the application build. `PLAYWRIGHT_CHANNEL=msedge` can select an installed browser on supported machines.
 
 An ephemeral fault-injection database runs separately on `127.0.0.1:27028`. Only that test service enables database test commands. Run a single fault suite at a time, and never deploy the test override. Generated results stay in ignored `test-results/`.
 
@@ -65,4 +72,5 @@ Use the same key and payload to retry an intent. A timeout is an unknown outcome
 - [Architecture and invariants](docs/architecture.md)
 - [Testing and limitations](docs/testing.md)
 - [Live updates and freshness](docs/live-updates.md)
+- [Browser behavior](docs/browser.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
