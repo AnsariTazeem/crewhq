@@ -86,7 +86,11 @@ export class Operations {
   private async lookup(intent: Intent) {
     return this.receipts.findOne(
       { _id: this.id(intent), ...intent },
-      { maxTimeMS: 1_500 },
+      {
+        readConcern: { level: "majority" },
+        readPreference: "primary",
+        maxTimeMS: 1_500,
+      },
     );
   }
   private reply(receipt: Receipt, fingerprint?: string): CommandReply {
@@ -153,7 +157,14 @@ export class Operations {
           { _id: receiptId, ...intent },
           { session },
         );
-        if (existing) return this.reply(existing, fingerprint);
+        if (existing) {
+          // An aborted snapshot does not establish durability for a receipt replay.
+          await session.abortTransaction();
+          const durable = await this.lookup(intent);
+          return durable
+            ? this.reply(durable, fingerprint)
+            : this.unresolved(intent.key);
+        }
         const receipt: Receipt = {
           _id: receiptId,
           ...intent,
