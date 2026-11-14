@@ -53,3 +53,14 @@ The suite uses signed test sessions and real MongoDB transactions. It covers per
 An ephemeral fault-injection database runs separately on `127.0.0.1:27028`. Only that test service enables database test commands. Run a single fault suite at a time, and never deploy the test override. Generated results stay in ignored `test-results/`.
 
 GitHub Actions runs formatting, typechecking, build and tests on pull requests and pushes to `main`. A workflow definition is not evidence of a successful remote run; inspect the checks for the exact commit being reviewed.
+
+## API conventions
+
+Protected routes use a session cookie. Application mutations also require JSON, the exact allowed `Origin`, `X-App-Request: 1` and a UUID `Idempotency-Key`.
+
+Use the same key and payload to retry an intent. A timeout is an unknown outcome; use actor-scoped operation lookup to reconcile it. A historical receipt does not describe current membership and cannot reapply an old action.
+
+- [API reference](docs/api.md)
+- [Architecture and invariants](docs/architecture.md)
+- [Testing and limitations](docs/testing.md)
+- [Third-party notices](THIRD_PARTY_NOTICES.md)
