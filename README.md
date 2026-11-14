@@ -16,7 +16,7 @@ The browser interface, full seed dataset and hosted load-test results are not in
 ## Requirements
 
 - Node.js 24 and npm.
-- Docker with Linux containers and Docker Compose 2.20.2 or later for the development replica set.
+- Docker Engine 25.0 or later with Linux containers and Docker Compose 2.20.2 or later for the development replica set.
 - A Google OAuth web client for interactive sign-in.
 
 ## Setup
