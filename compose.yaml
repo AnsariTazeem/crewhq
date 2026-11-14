@@ -1,0 +1,21 @@
+name: hack4hack-core
+services:
+  mongo:
+    image: mongo:8.0@sha256:d97fea17ccb8d004cd137be8dab54d70d0df11be69c9f422aefe4484c8414ab7
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "127.0.0.1:27027:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --eval
+          'try { rs.status(); } catch(e) { if(e.code === 94) rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]}); else throw e; } quit(db.hello().isWritablePrimary ? 0 : 1);'
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+volumes:
+  mongo-data:

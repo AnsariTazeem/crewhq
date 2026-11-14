@@ -1,0 +1,38 @@
+name: Core API correctness
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: core-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run db:test:up
+      - run: npm run typecheck
+      - run: npm run format:check
+      - run: npm run build
+      - run: npm test -- --reporter=default --reporter=junit --outputFile.junit=test-results/api.xml
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        if: always()
+        with:
+          name: core-api-evidence
+          path: test-results/
+          retention-days: 14
+          if-no-files-found: error
+      - run: npm run db:down
+        if: always()
