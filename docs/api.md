@@ -9,6 +9,7 @@ All routes below are under `/api`. Authentication-provider routes under `/api/au
 | GET | `/events/:eventId/me` | Current event membership and size eligibility. |
 | GET / POST | `/events/:eventId/profile` | Read or replace the current participant's event profile. |
 | GET | `/events/:eventId/board` | Event-scoped people or recruiting-team discovery. |
+| GET | `/events/:eventId/live` | Authenticated event-scoped SSE ready/refresh/reset hints. |
 | GET | `/events/:eventId/teammate-suggestions` | Explained solo or recruiting-leader suggestions. |
 | POST | `/events/:eventId/teams` | Create a team with `{ "name": "Apex" }`. |
 | GET | `/events/:eventId/teams/:teamId` | Safe team summary; roster IDs require current membership. |
@@ -39,3 +40,5 @@ Shared invitation input is `{ "kind": "shared" }`. Personal return input is `{ "
 Suggestions accept `limit` and `unrankedLimit` (1–25, default 10), plus `unrankedAfter`. Context comes from the current participant or their recruiting team when they are its leader. The response explains the versioned scoring rule and separates incomplete results. Ordinary members cannot obtain team-management suggestions.
 
 Typical statuses: 400 invalid input, 401 no valid session, 403 forbidden, 404 unavailable resource, 409 domain conflict, 429 known rate limit and 503 required infrastructure unavailable. Operation lookup uses 202 for unresolved observations and 200 with `originalStatus` for a terminal historical result.
+
+Event view reads accept `X-Read-Frontier` from a live frame. A successful read returns an acknowledgement in the same header only after confirming its minimum snapshot with majority durability. This applies to board, suggestions, event membership/profile, team, history, requests and invitation views. Historical operation lookup has its own reconciliation semantics. `X-Snapshot-Mode` defaults to `reset`; `refresh` requires a frontier and allows overlapping public board projections to share work. Private projections are not shared. See [live updates](live-updates.md) for connection and recovery behavior.
