@@ -23,7 +23,7 @@ Results are generated for the machine and commit being tested; local reports are
 
 The live tests exercise real HTTP streams and replica sets: marker-gated readiness, neutral event hints, signed minimum reads, logout/expiry, connection limits, response backpressure, source failure/reconnect and overlapping refreshes. Fault commands are restricted to the separate loopback service. No application endpoint exposes them.
 
-A passing run does not establish Google's external OAuth flow, every distributed failure, browser accessibility, full-dataset performance or hosted capacity. Injected uncertain-commit labels, majority-read command checks and response-loss cases have deliberately bounded scope. Local HTTP/source recovery tests do not establish browser or hosted proxy behavior. The required 10,000-user/2,000-team seed and 100-concurrent-user board benchmark still need results; no p95 figure is claimed here.
+A passing run does not establish Google's external OAuth flow, every distributed failure, browser accessibility, full-dataset performance or hosted capacity. Injected uncertain-commit labels, majority-read command checks and response-loss cases have deliberately bounded scope. Local HTTP/source recovery tests do not establish browser or hosted proxy behavior. The seed and strict authenticated board benchmark are runnable; see [load testing](load-testing.md). A passing result applies only to the environment and workload in its report.
 
 ## Browser verification
 

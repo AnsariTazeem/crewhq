@@ -17,6 +17,7 @@ export class LiveReads {
     eventId: string,
     token: string | undefined,
     read: (options: ProjectionRead) => Promise<CommandReply>,
+    snapshotStart: "barrier" | "projection" = "barrier",
   ) {
     const minimum = this.source.minimum(eventId, token);
     const session = this.client.startSession({ causalConsistency: true });
@@ -29,10 +30,12 @@ export class LiveReads {
         maxCommitTimeMS: 1_500,
       });
       const options = { session, maxTimeMS: 1_500 };
-      // The first read fixes a snapshot at or after the required operation time.
-      await this.db
-        .collection<{ _id: string }>("outbox")
-        .findOne({ _id: "read-barrier" }, options);
+      // Only callbacks guaranteed to use this session may start the snapshot
+      // themselves. Current-only views still need an explicit causal barrier.
+      if (snapshotStart === "barrier")
+        await this.db
+          .collection<{ _id: string }>("outbox")
+          .findOne({ _id: "read-barrier" }, options);
       const reply = await read(options);
       if (reply.status !== 200) return { reply };
       await session.commitTransaction();

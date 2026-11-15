@@ -21,7 +21,9 @@
     "db:down": "docker compose -f compose.yaml -f compose.test.yaml --profile faults down",
     "dev:web": "vite --config web/vite.config.ts",
     "build:api": "tsc -p tsconfig.build.json",
-    "test:browser": "npm run build && playwright test"
+    "test:browser": "npm run build && playwright test",
+    "seed": "node --import tsx scripts/seed.ts",
+    "test:load": "node --import tsx scripts/load/run.ts"
   },
   "dependencies": {
     "@better-auth/mongo-adapter": "1.7.23",

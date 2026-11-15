@@ -20,7 +20,7 @@ Invitation codes contain 128 random bits, with a digest for lookup and an encryp
 
 ## Reads and ranking
 
-Current-permission checks use bounded linearizable primary reads. Multi-query private views recheck current authority/revision before releasing data. Private request/grant records, email addresses and usable credentials are excluded from general responses. Profile changes update the event person record and publish an event refresh entry without inventing a membership audit event.
+Current-permission checks use bounded linearizable primary reads. Board requests overlap independent current-session and event-enrollment reads using separate implicit database sessions; both must finish successfully before a response is authorized. The current enrollment record is passed to Discovery.board, which no longer repeats that lookup. Refresh sharing retains its separate per-caller enrollment guard. No authorization cache or weaker read concern is introduced. Multi-query private views recheck current authority/revision before releasing data. Private request/grant records, email addresses and usable credentials are excluded from general responses. Profile changes update the event person record and publish an event refresh entry without inventing a membership audit event.
 
 Ranking uses an explicit snapshot concern on every projection read and independently rechecks current permissions. Version `skills-zone-v1` orders declared skill coverage first, then local-clock phase proximity, then stable participant ID. With wanted tags, skill coverage is the fraction matched. Without wanted tags, additional declared skills beyond the solo/team offered union are capped at three and divided by three.
 
