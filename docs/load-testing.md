@@ -25,3 +25,7 @@ Each invocation writes a new directory under ignored test-results/load/ with rep
 GitHub Actions runs a separate load job and uploads its reports, including failed results, for 14 days. Download evidence needed for longer retention. Benchmark traffic excludes Google's external consent/login latency and concurrent membership writes. The generator, API and database share one machine; report that topology when interpreting results. Windows Docker networking adds a host/VM path. Use controlled comparisons before attributing latency to a particular component.
 
 The exploratory Windows trials did not meet the latency target. Two final Linux CI runs passed under the documented workload; see the [measured report and retained failed trials](load-report.md). These measurements do not establish hosted capacity.
+
+## Database settings
+
+The self-managed Compose replica set configures a 10 ms journal commit interval. This reduces journal batching delay at the cost of more frequent storage I/O. Journaling, majority write concern and linearizable authorization reads remain enabled. The runner records the actual interval and replica-set membership, and rejects an explicitly disabled majority journal default. See the [MongoDB parameter reference](https://www.mongodb.com/docs/v8.0/reference/parameters/#mongodb-parameter-param.journalCommitInterval). This setting does not configure the managed Atlas deployment; earlier reports without this metadata must not be treated as measurements of the tuned configuration.

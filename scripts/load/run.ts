@@ -183,6 +183,19 @@ try {
     timeout: 120_000,
   }).trim();
   report.mongodb = (await db.command({ buildInfo: 1 })).version;
+  const journal = await client.db("admin").command({
+    getParameter: 1,
+    journalCommitInterval: 1,
+  });
+  const replica = await client.db("admin").command({ replSetGetConfig: 1 });
+  report.databaseSettings = {
+    journalCommitIntervalMs: journal.journalCommitInterval,
+    majorityJournalDefault:
+      replica.config.writeConcernMajorityJournalDefault ?? "server-default",
+    replicaSetMembers: replica.config.members.length,
+  };
+  if (replica.config.writeConcernMajorityJournalDefault === false)
+    throw new BenchmarkFailure("Majority journal durability must remain enabled");
   // Session issuance is isolated from the served auth instance. No test routes exist on the target.
   const fixtureAuth = betterAuth({
     ...options,
