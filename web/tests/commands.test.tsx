@@ -1,26 +1,30 @@
 // @vitest-environment jsdom
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
 } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { webcrypto } from "node:crypto";
 import { useCommands } from "../src/commands";
+import { ApiError, loadIntent, saveIntent } from "../src/api";
+beforeEach(() => vi.stubGlobal("crypto", webcrypto));
 
 afterEach(() => {
   cleanup();
   sessionStorage.clear();
   vi.unstubAllGlobals();
 });
-function Control() {
+function Control({ name = "Crew" }: { name?: string }) {
   const commands = useCommands("person-a", "event-a", () => {});
   return (
     <>
       <button
         onClick={() => {
-          void commands.run("/teams", { name: "Crew" }, "Create team");
+          void commands.run("/teams", { name }, "Create team");
         }}
       >
         Create
@@ -113,3 +117,123 @@ it("does not persist an invitation credential or report an uncertain response as
     "abcdefghijklmnopqrstuv",
   );
 });
+
+it("an unmounted command owner cannot delete a newer recovery record", async () => {
+  let complete!: (response: Response) => void;
+  const fetcher = vi.fn(
+    () =>
+      new Promise<Response>((resolve) => {
+        complete = resolve;
+      }),
+  );
+  vi.stubGlobal("fetch", fetcher);
+  const first = render(<Control />);
+  fireEvent.click(screen.getByText("Create"));
+  await waitFor(() => expect(fetcher).toHaveBeenCalledOnce());
+  first.unmount();
+  const newer = {
+    key: "new-operation",
+    actorId: "person-a",
+    eventId: "event-a",
+    path: "/teams",
+    label: "New action",
+    at: Date.now(),
+    body: { name: "New crew" },
+  };
+  saveIntent(newer);
+  render(<Control />);
+  await act(async () => complete(new Response('{"outcome":"committed"}')));
+  expect(loadIntent("person-a", "event-a")?.key).toBe("new-operation");
+  expect(screen.getByText("Unconfirmed")).toBeTruthy();
+});
+
+it("a confirmed preflight validation rejection releases the same pending intent", async () => {
+  const fetcher = vi
+    .fn()
+    .mockRejectedValueOnce(new TypeError("Lost response"))
+    .mockResolvedValueOnce(
+      new Response('{"outcome":"unresolved"}', { status: 202 }),
+    )
+    .mockResolvedValueOnce(
+      new Response('{"code":"INVALID_INPUT"}', { status: 400 }),
+    );
+  vi.stubGlobal("fetch", fetcher);
+  render(<Control name="" />);
+  fireEvent.click(screen.getByText("Create"));
+  await screen.findByText("Unconfirmed");
+  fireEvent.click(screen.getByText("Retry"));
+  await screen.findByText("No pending action");
+  expect(loadIntent("person-a", "event-a")).toBeNull();
+});
+
+it.each([
+  { code: "", terminal: false },
+  { code: "abcdefghijklmnopqrstuw", terminal: false },
+  { code: "abcdefghijklmnopqrstuv", terminal: true },
+])(
+  "requires the same secret before retry after reload ($terminal)",
+  async ({ code, terminal }) => {
+    const fetcher = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("Lost response"))
+      .mockResolvedValueOnce(
+        new Response('{"outcome":"unresolved"}', { status: 202 }),
+      )
+      .mockResolvedValueOnce(new Response('{"outcome":"committed"}'));
+    vi.stubGlobal("fetch", fetcher);
+    function SecretControl() {
+      const c = useCommands("person-a", "event-a", () => {});
+      return (
+        <>
+          <button
+            onClick={() => {
+              void c.run(
+                "/invitations/redeem",
+                { code: "abcdefghijklmnopqrstuv" },
+                "Join",
+                true,
+              );
+            }}
+          >
+            Start
+          </button>
+          <button
+            onClick={() => {
+              void c.reconcile(true, code);
+            }}
+          >
+            Retry secret
+          </button>
+          <p>{c.pending ? "Unconfirmed" : "Finished"}</p>
+          {c.error instanceof ApiError && <p>{c.error.code}</p>}
+          <p>{c.notice}</p>
+        </>
+      );
+    }
+    const first = render(<SecretControl />);
+    fireEvent.click(screen.getByText("Start"));
+    await screen.findByText("Unconfirmed");
+    await waitFor(() => expect(fetcher).toHaveBeenCalledOnce());
+    const original = loadIntent("person-a", "event-a")!;
+    if (code) {
+      first.unmount();
+      render(<SecretControl />);
+    }
+    fireEvent.click(screen.getByText("Retry secret"));
+    if (terminal) {
+      await screen.findByText("Finished");
+      expect(fetcher).toHaveBeenCalledTimes(3);
+      expect(
+        new Headers(fetcher.mock.calls[2]?.[1]?.headers).get("Idempotency-Key"),
+      ).toBe(original.key);
+    } else {
+      if (code) await screen.findByText("CREDENTIAL_MISMATCH");
+      else
+        await screen.findByText(
+          "Re-enter the original invitation code to retry this same action, or check its status again.",
+        );
+      expect(screen.getByText("Unconfirmed")).toBeTruthy();
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    }
+  },
+);

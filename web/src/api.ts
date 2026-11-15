@@ -65,6 +65,7 @@ export type PendingIntent = {
   label: string;
   at: number;
   body?: Record<string, unknown>;
+  credentialDigest?: string;
 };
 const intentPrefix = "crewhq.pending:";
 const intentKey = (actorId: string, eventId: string) =>
@@ -90,24 +91,22 @@ export function loadIntent(
   }
   return null;
 }
-export function saveIntent(
-  intent: PendingIntent | null,
-  actorId?: string,
-  eventId?: string,
-) {
+export function saveIntent(intent: PendingIntent) {
   try {
-    if (intent)
-      sessionStorage.setItem(
-        intentKey(intent.actorId, intent.eventId),
-        JSON.stringify(intent),
-      );
-    else if (actorId && eventId)
-      sessionStorage.removeItem(intentKey(actorId, eventId));
-    else
-      for (const key of Object.keys(sessionStorage))
-        if (key.startsWith(intentPrefix)) sessionStorage.removeItem(key);
+    sessionStorage.setItem(
+      intentKey(intent.actorId, intent.eventId),
+      JSON.stringify(intent),
+    );
   } catch {
     /* The current tab retains its in-memory intent. */
+  }
+}
+export function clearIntent(intent: PendingIntent) {
+  try {
+    if (loadIntent(intent.actorId, intent.eventId)?.key === intent.key)
+      sessionStorage.removeItem(intentKey(intent.actorId, intent.eventId));
+  } catch {
+    /* Recovery remains available in memory when storage is unavailable. */
   }
 }
 export async function send(
@@ -169,6 +168,8 @@ export function message(error: unknown) {
     SUCCESSOR_CHANGED:
       "That teammate is no longer eligible to lead. Choose a current member.",
     INVALID_INPUT: "Check the form fields and try again.",
+    CREDENTIAL_MISMATCH:
+      "Enter the original invitation code. A different code cannot retry this unfinished action.",
     RANKING_DATES_UNCONFIGURED:
       "Suggestions need the organizer to configure this event's dates. You can still browse the board.",
     TEAM_NOT_RECRUITING:
