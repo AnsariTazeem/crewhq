@@ -1,5 +1,5 @@
 import { once } from "node:events";
-import { MongoClient } from "mongodb";
+import { MongoClient, type Document } from "mongodb";
 import { setTimeout as delay } from "node:timers/promises";
 import { expect, test } from "vitest";
 import { createTestHarness } from "./support/harness.js";
@@ -90,7 +90,19 @@ test("source failure resets streams and reconnect snapshots recover a write made
 });
 
 test("an uncertain refresh commit fails closed without acknowledging its read frontier", async () => {
-  const harness = await createTestHarness({ mongoUri: uri, live: true });
+  const harness = await createTestHarness({
+    mongoUri: uri,
+    live: true,
+    monitorCommands: true,
+  });
+  const transactionSessions = new Map<string, Document>();
+  harness.client.on("commandStarted", (event) => {
+    if (event.commandName === "commitTransaction" && event.command.lsid)
+      transactionSessions.set(
+        JSON.stringify(event.command.lsid),
+        event.command.lsid,
+      );
+  });
   const control = await new MongoClient(uri, {
     serverSelectionTimeoutMS: 3_000,
   }).connect();
@@ -126,6 +138,13 @@ test("an uncertain refresh commit fails closed without acknowledging its read fr
     await control
       .db("admin")
       .command({ configureFailPoint: "failCommand", mode: "off" });
+    // The injected commit failure can leave a server-side read transaction active
+    // after the driver considers it committed. Clean only this fixture's logical
+    // sessions before dropping its database, rather than waiting for server expiry.
+    if (transactionSessions.size)
+      await control
+        .db("admin")
+        .command({ killSessions: [...transactionSessions.values()] });
     await harness.close();
     await control.close();
   }
