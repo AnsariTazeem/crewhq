@@ -12,7 +12,7 @@ A React and TypeScript workspace for event-based team formation. Find complement
 - Authenticated live refresh hints, signed read frontiers and reset/reconnect recovery.
 - Responsive participant, leader and team views with keyboard-operable dialogs and explicit invitation confirmation.
 
-The synthetic seed and authenticated k6 workload are available; hosted load-test results are not established. Google OAuth needs provider configuration and end-to-end verification. Hosted streaming and proxy behavior remain unverified; local correctness and browser tests do not establish production readiness.
+The synthetic seed and authenticated k6 workload are available; the [load report](docs/load-report.md) records passing Linux measurements and earlier failed trials. Interactive sign-in requires a configured Google OAuth client. Google's consent/callback and session persistence have been checked locally. Hosted authentication, streaming and proxy behavior remain unverified; local correctness and browser tests do not establish production readiness.
 
 ## Requirements
 
@@ -72,6 +72,8 @@ Use the same key and payload to retry an intent. A timeout is an unknown outcome
 
 - [API reference](docs/api.md)
 - [Architecture and invariants](docs/architecture.md)
+- [One-page design document](docs/design.pdf)
+- [Measured load report](docs/load-report.md)
 - [Testing and limitations](docs/testing.md)
 - [Live updates and freshness](docs/live-updates.md)
 - [Browser behavior](docs/browser.md)
