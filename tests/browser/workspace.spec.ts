@@ -149,7 +149,28 @@ test("invitations require confirmation and removed members require a personal re
       (await (await invitee.request.get(`/api/events/${eventId}/me`)).json())
         .team,
     ).toBeNull();
+    await invitee.route("**/invitations/redeem", async (route) => {
+      await route.fetch();
+      await route.abort("failed");
+    });
     await invitee.getByRole("button", { name: "Accept invitation" }).click();
+    const pending = invitee.getByRole("region", { name: "Unconfirmed action" });
+    await expect(pending).toBeVisible();
+    await invitee.reload();
+    await expect(pending).toBeVisible();
+    expect(
+      await invitee.evaluate(
+        () => sessionStorage.getItem("crewhq.invitation") !== null,
+      ),
+    ).toBe(true);
+    await invitee.getByRole("button", { name: "Check status" }).click();
+    await expect(pending).toHaveCount(0);
+    expect(
+      await invitee.evaluate(
+        () => sessionStorage.getItem("crewhq.invitation") === null,
+      ),
+    ).toBe(true);
+    await invitee.unroute("**/invitations/redeem");
     await expect(invitee.getByRole("dialog")).toHaveCount(0);
     await expect(
       invitee
@@ -190,7 +211,26 @@ test("invitations require confirmation and removed members require a personal re
       .inputValue();
     await leader.getByRole("button", { name: "Close dialog" }).click();
     await invitee.goto(personalLink);
+    await invitee.route("**/invitations/redeem", async (route) => {
+      await route.fetch();
+      await route.abort("failed");
+    });
     await invitee.getByRole("button", { name: "Accept invitation" }).click();
+    await expect(pending).toBeVisible();
+    await invitee.reload();
+    await expect(pending).toBeVisible();
+    expect(
+      await invitee.evaluate(
+        () => sessionStorage.getItem("crewhq.invitation") !== null,
+      ),
+    ).toBe(true);
+    await invitee.getByRole("button", { name: "Check status" }).click();
+    await expect(pending).toHaveCount(0);
+    expect(
+      await invitee.evaluate(
+        () => sessionStorage.getItem("crewhq.invitation") === null,
+      ),
+    ).toBe(true);
     await expect(invitee.getByRole("dialog")).toHaveCount(0);
     await expect(
       invitee

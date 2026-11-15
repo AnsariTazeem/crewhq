@@ -1,5 +1,28 @@
 import { expect, test } from "@playwright/test";
 
+test("an invitation expires before delayed authentication completes", async ({
+  page,
+}) => {
+  await page.clock.install();
+  const landing = await page.request.get("/__test/login?user=incomplete");
+  const eventId = new URL(landing.url()).searchParams.get("event")!;
+  await page.route("**/api/me", (route) =>
+    route.fulfill({ status: 503, json: { code: "IDENTITY_UNAVAILABLE" } }),
+  );
+  await page.goto(`/join?event=${eventId}#code=abcdefghijklmnopqrstuv`);
+  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+  await page.clock.fastForward(300_001);
+  expect(
+    await page.evaluate(() => sessionStorage.getItem("crewhq.invitation")),
+  ).toBeNull();
+  await page.unroute("**/api/me");
+  await page.getByRole("button", { name: "Try again" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Find your people." }),
+  ).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
 test("an invitation's lost response offers accessible operation recovery", async ({
   page,
 }) => {
@@ -38,6 +61,13 @@ test("leadership handover closes another tab's private invitation view", async (
     const workspace = privateView.url();
     await leaving.goto(workspace);
     await successor.goto("/__test/login?user=successor");
+    await successor
+      .getByRole("button", { name: "Requests", exact: true })
+      .click();
+    await successor.getByRole("button", { name: "Next", exact: true }).click();
+    const leaderQueue = successor.waitForRequest((request) =>
+      /\/teams\/[^/]+\/requests\?/.test(request.url()),
+    );
     await privateView
       .getByRole("button", { name: "Invite teammates", exact: true })
       .click();
@@ -53,6 +83,12 @@ test("leadership handover closes another tab's private invitation view", async (
       .getByLabel("Choose the next leader")
       .selectOption({ label: "Riley Park" });
     await leaving.getByRole("button", { name: "Confirm leave" }).click();
+    expect(new URL((await leaderQueue).url()).searchParams.has("after")).toBe(
+      false,
+    );
+    await expect(
+      successor.getByRole("heading", { name: "Join requests" }),
+    ).toBeVisible();
     await expect(privateView.getByRole("dialog")).toHaveCount(0);
     await expect(
       privateView.getByRole("heading", { name: "Your crew is out there." }),
@@ -152,4 +188,80 @@ test("invitation context expires and logout clears tab-local invitation data", a
   expect(
     await page.evaluate(() => sessionStorage.getItem("crewhq.invitation")),
   ).toBeNull();
+});
+
+test("sign-out preserves an unconfirmed action for the same participant's next sign-in", async ({
+  page,
+}) => {
+  await page.goto("/__test/login?user=recovery");
+  await page.route(/\/api\/events\/[^/]+\/teams$/, async (route) => {
+    await route.fetch();
+    await route.abort("failed");
+  });
+  await page
+    .getByRole("button", { name: "Create a team", exact: true })
+    .click();
+  await page.getByLabel("Team name").fill("Recovery Crew");
+  await page.getByRole("button", { name: "Create team", exact: true }).click();
+  await page.getByRole("button", { name: "Review unconfirmed action" }).click();
+  const pending = page.getByRole("region", { name: "Unconfirmed action" });
+  const key = await pending.locator("code").textContent();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Sign in with Google" }),
+  ).toBeVisible();
+  expect(await page.evaluate(() => JSON.stringify(sessionStorage))).toContain(
+    key,
+  );
+  await page.goto("/__test/login?user=recovery");
+  await expect(pending.locator("code")).toHaveText(key!);
+  await page.getByRole("button", { name: "Check status" }).click();
+  await expect(pending).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Recovery Crew", exact: true }),
+  ).toBeVisible();
+});
+
+test("an unconfirmed invitation expires its recovery input without losing the operation key", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto("/__test/login?user=incomplete");
+  const eventId = new URL(page.url()).searchParams.get("event")!;
+  let posts = 0;
+  await page.route("**/invitations/redeem", (route) => {
+    posts++;
+    return route.abort("failed");
+  });
+  await page.goto("/join?event=" + eventId + "#code=abcdefghijklmnopqrstuv");
+  await page.getByRole("button", { name: "Accept invitation" }).click();
+  await page.getByRole("button", { name: "Review unconfirmed action" }).click();
+  const pending = page.getByRole("region", { name: "Unconfirmed action" });
+  const key = await pending.locator("code").textContent();
+  await page
+    .getByLabel("Original invitation code (only if retrying)")
+    .fill("abcdefghijklmnopqrstuv");
+  await page.clock.fastForward(300_001);
+  await page.clock.resume();
+  await expect
+    .poll(
+      async () =>
+        (await page
+          .getByLabel("Original invitation code (only if retrying)")
+          .inputValue()) === "",
+    )
+    .toBe(true);
+  expect(
+    await page.evaluate(
+      () => sessionStorage.getItem("crewhq.invitation") === null,
+    ),
+  ).toBe(true);
+  await expect(pending.locator("code")).toHaveText(key!);
+  await page.getByRole("button", { name: "Retry same action" }).click();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Re-enter the original invitation code" }),
+  ).toBeVisible();
+  expect(posts).toBe(1);
 });

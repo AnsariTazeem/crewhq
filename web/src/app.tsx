@@ -13,12 +13,12 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { ApiError, message, saveIntent } from "./api";
+import { ApiError, message } from "./api";
 import { useCommands } from "./commands";
 import type { EventInfo, Identity, Membership, Profile } from "./model";
 import { LiveConnection } from "./live";
 import { ActorContext, LiveContext, useQuery } from "./queries";
-import { clearInvitation, invitationTimeRemaining } from "./invitation-context";
+import { useInvitation } from "./invitation-state";
 import { Avatar, Brand, Busy, ErrorBox } from "./ui";
 import { CreateTeam, JoinTeam } from "./actions";
 import { DiscoveryBoard, SuggestionsView } from "./board";
@@ -26,15 +26,7 @@ import { ProfilePanel, RequestsView, TeamPanel, TeamView } from "./team";
 
 const auth = createAuthClient();
 type View = "discover" | "suggestions" | "team" | "requests" | "profile";
-export function App({
-  eventId,
-  invitationCode,
-  invitationRevision,
-}: {
-  eventId: string;
-  invitationCode: string;
-  invitationRevision: number;
-}) {
+export function App({ eventId }: { eventId: string }) {
   const identity = useQuery<Identity>("/me", false);
   if (identity.loading)
     return (
@@ -60,8 +52,6 @@ export function App({
       key={`${identity.data.id}:${eventId}`}
       identity={identity.data}
       eventId={eventId}
-      invitationCode={invitationCode}
-      invitationRevision={invitationRevision}
       signedOut={identity.reload}
     />
   );
@@ -171,14 +161,10 @@ function SignIn({
 function Workspace({
   identity,
   eventId,
-  invitationCode,
-  invitationRevision,
   signedOut,
 }: {
   identity: Identity;
   eventId: string;
-  invitationCode: string;
-  invitationRevision: number;
   signedOut: () => void;
 }) {
   const live = useMemo(() => new LiveConnection(eventId), [eventId]);
@@ -188,8 +174,6 @@ function Workspace({
         <WorkspaceContent
           identity={identity}
           eventId={eventId}
-          invitationCode={invitationCode}
-          invitationRevision={invitationRevision}
           signedOut={signedOut}
           live={live}
         />
@@ -200,15 +184,11 @@ function Workspace({
 function WorkspaceContent({
   identity,
   eventId,
-  invitationCode,
-  invitationRevision,
   signedOut,
   live,
 }: {
   identity: Identity;
   eventId: string;
-  invitationCode: string;
-  invitationRevision: number;
   signedOut: () => void;
   live: LiveConnection;
 }) {
@@ -220,19 +200,33 @@ function WorkspaceContent({
   );
   const [view, setView] = useState<View>("discover");
   const [mobileNav, setMobileNav] = useState(false);
-  const [code, setCode] = useState(invitationCode);
+  const invitation = useInvitation();
   const [credential, setCredential] = useState("");
   const [signOutError, setSignOutError] = useState<unknown>(null);
   const commands = useCommands(
     identity.id,
     eventId,
-    () => {
+    (completed, result) => {
+      if (
+        completed.path === "/invitations/redeem" &&
+        result.outcome === "committed"
+      )
+        invitation.clear();
+      setCredential("");
       membership.reload();
       event.reload();
       live.recover();
     },
     signedOut,
   );
+  useEffect(() => {
+    setCredential("");
+  }, [invitation.revision]);
+  useEffect(() => {
+    if (!credential) return;
+    const timer = setTimeout(() => setCredential(""), 300_000);
+    return () => clearTimeout(timer);
+  }, [credential]);
   useEffect(() => {
     if (!enrolled) return;
     const stop = live.start();
@@ -265,31 +259,23 @@ function WorkspaceContent({
       window.removeEventListener("focus", focus);
     };
   }, [enrolled, live]);
-  useEffect(() => {
-    setCode(invitationCode);
-    const timer = setTimeout(
-      () => {
-        clearInvitation();
-        setCode("");
-      },
-      invitationTimeRemaining() || (invitationCode ? 300_000 : 0),
-    );
-    return () => clearTimeout(timer);
-  }, [invitationRevision, invitationCode]);
   const team = membership.data?.team ?? null;
   const admissionsOpen =
     !!event.data &&
     new Date(event.data.admissionClosesAt).getTime() > Date.now();
-  const canForm = enrolled && admissionsOpen && !team && !membership.stale;
+  const canForm =
+    enrolled &&
+    admissionsOpen &&
+    !team &&
+    !membership.stale &&
+    navigator.onLine;
   const signOut = async () => {
     const result = await auth.signOut();
     if (result.error) {
       setSignOutError(new Error("Sign-out unavailable"));
       return;
     }
-    saveIntent(null);
-    clearInvitation();
-    setCode("");
+    invitation.clear();
     live.suspend();
     signedOut();
   };
@@ -447,7 +433,9 @@ function WorkspaceContent({
             <strong>{commands.pending.label}: outcome unconfirmed</strong>
             <p>
               A lost response does not mean the action failed. Keep this
-              operation key: <code>{commands.pending.key}</code>
+              operation key: <code>{commands.pending.key}</code>. Recovery
+              details stay in this tab after sign-out until resolved or the tab
+              is closed.
             </p>
             <div className="button-row">
               <button
@@ -576,13 +564,10 @@ function WorkspaceContent({
                       </div>
                       <div className="button-row">
                         <JoinTeam
-                          key={`${code}-${invitationRevision}`}
+                          key={invitation.revision}
                           commands={commands}
-                          initialCode={code}
-                          clearCode={() => {
-                            setCode("");
-                            clearInvitation();
-                          }}
+                          initialCode={invitation.code}
+                          clearCode={invitation.clear}
                           disabled={!canForm}
                         />
                         <CreateTeam commands={commands} disabled={!canForm} />
@@ -603,7 +588,7 @@ function WorkspaceContent({
               )}
               {view === "requests" && (
                 <RequestsView
-                  key={team?.id ?? "solo"}
+                  key={`${team?.id ?? "solo"}:${team?.leaderId === identity.id ? "leader" : "participant"}`}
                   eventId={eventId}
                   identity={identity}
                   team={team}

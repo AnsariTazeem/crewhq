@@ -1,8 +1,7 @@
 import { createRoot } from "react-dom/client";
-import { useEffect, useState } from "react";
 import "@fontsource-variable/dm-sans";
 import { App } from "./app";
-import { captureInvitation } from "./invitation-context";
+import { InvitationProvider } from "./invitation-state";
 import "./style.css";
 
 const configuredEvent =
@@ -13,7 +12,6 @@ const validEvent =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     requestedEvent,
   );
-const initialInvitation = validEvent ? captureInvitation(requestedEvent) : "";
 const root = createRoot(document.getElementById("root")!);
 if (!validEvent)
   root.render(
@@ -23,29 +21,9 @@ if (!validEvent)
       <a href="/">Open default event</a>
     </main>,
   );
-else root.render(<Entry />);
-
-function Entry() {
-  const [invitation, setInvitation] = useState({
-    code: initialInvitation,
-    revision: 0,
-  });
-  useEffect(() => {
-    const capture = () => {
-      if (new URLSearchParams(location.hash.slice(1)).has("code"))
-        setInvitation((previous) => ({
-          code: captureInvitation(requestedEvent),
-          revision: previous.revision + 1,
-        }));
-    };
-    window.addEventListener("hashchange", capture);
-    return () => window.removeEventListener("hashchange", capture);
-  }, []);
-  return (
-    <App
-      eventId={requestedEvent}
-      invitationCode={invitation.code}
-      invitationRevision={invitation.revision}
-    />
+else
+  root.render(
+    <InvitationProvider eventId={requestedEvent}>
+      <App eventId={requestedEvent} />
+    </InvitationProvider>,
   );
-}

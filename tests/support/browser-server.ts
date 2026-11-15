@@ -1,7 +1,8 @@
 import express from "express";
 import { createTestHarness } from "./harness.js";
-import type { Event, Team } from "../../src/membership.js";
+import type { Event, Team, Person } from "../../src/membership.js";
 import path from "node:path";
+import type { JoinRequest } from "../../src/requests.js";
 import { randomUUID } from "node:crypto";
 
 if (process.env.NODE_ENV !== "test")
@@ -115,6 +116,7 @@ for (const [alias, name] of [
   ["fixed-member", "Quinn Ellis"],
   ["actor-a", "Original Person"],
   ["actor-b", "Replacement Person"],
+  ["recovery", "River Morgan"],
 ]) {
   const person = await h.person(name!);
   people.set(alias!, person);
@@ -133,6 +135,22 @@ await h
     { code: handoverCode },
   )
   .expect(201);
+const successorPerson = await h.db
+  .collection<Person>("people")
+  .findOne({ eventId, userId: people.get("successor")!.id });
+await h.db.collection<JoinRequest>("requests").insertMany(
+  Array.from({ length: 21 }, () => ({
+    _id: randomUUID(),
+    eventId,
+    teamId: handoverTeam,
+    applicantId: people.get("successor")!.id,
+    personId: successorPerson!._id,
+    epoch: 0,
+    state: "withdrawn" as const,
+    at: new Date(),
+    resolvedAt: new Date(),
+  })),
+);
 const frozenCreated = await h
   .command(`/api/events/${eventId}/teams`, people.get("frozen")!, {
     name: "Fixed Crew",
@@ -200,12 +218,16 @@ app.post("/__test/freeze", async (request, response) => {
 app.get("/__test/ready", (_request, response) =>
   response.json({ ready: true }),
 );
-app.get("/__test/login", (request, response) => {
+app.get("/__test/login", async (request, response) => {
   const person = people.get(String(request.query.user));
   if (!person) {
     response.sendStatus(404);
     return;
   }
+  const { test: fixtures } = await h.auth.$context;
+  const login = await fixtures.login({ userId: person.id });
+  person.cookie = login.headers.get("cookie")!;
+  person.sessionId = login.session.id;
   response.setHeader(
     "Set-Cookie",
     `${person.cookie}; Path=/; HttpOnly; SameSite=Lax`,
