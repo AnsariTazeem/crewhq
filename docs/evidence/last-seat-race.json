@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-11-15T12:36:19.499Z",
+  "node": "v24.22.2",
+  "contenders": 50,
+  "successfulAdmissions": 1,
+  "knownCapacityRejections": 49,
+  "finalRoster": 2,
+  "matchingPersonPointers": 2,
+  "joinAuditRecords": 1,
+  "terminalReceipts": 50,
+  "clientDispatchSpreadMs": 0.5710739999999532,
+  "scope": "Local real MongoDB replica set; client-side release barrier; actual authenticated HTTP. Not a hosted capacity/latency result."
+}
