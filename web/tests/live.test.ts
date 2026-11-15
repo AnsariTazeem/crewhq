@@ -41,3 +41,25 @@ it("treats reconnect as a reset and ignores frames from a closed connection", ()
   expect(live.getSnapshot().frontier).toBe("f1");
   expect(sources[0]!.close).toHaveBeenCalledOnce();
 });
+
+it("discards a rejected minimum even after the connection owner stops", () => {
+  const handlers = new Map<string, (event: { data: string }) => void>();
+  const live = new LiveConnection(
+    "event",
+    () =>
+      ({
+        addEventListener: (
+          name: string,
+          callback: (event: { data: string }) => void,
+        ) => handlers.set(name, callback),
+        close: () => {},
+      }) as unknown as EventSource,
+  );
+  const stop = live.start();
+  handlers.get("ready")!({
+    data: JSON.stringify({ generation: "generation", frontier: "expired" }),
+  });
+  stop();
+  live.discardMinimum();
+  expect(live.getSnapshot().frontier).toBeNull();
+});

@@ -55,6 +55,7 @@ export function useQuery<T>(path: string | null, liveRead = true): Query<T> {
     let stopped = false;
     let running = false;
     let dirty = true;
+    let frontierRepairs = 0;
     const run = async () => {
       if (running || stopped) return;
       running = true;
@@ -73,6 +74,7 @@ export function useQuery<T>(path: string | null, liveRead = true): Query<T> {
                 : "reset",
           });
           if (stopped) break;
+          frontierRepairs = 0;
           const latest = live?.getSnapshot() ?? idle;
           if (liveRead && latest.revision !== at.revision) {
             dirty = true;
@@ -88,8 +90,11 @@ export function useQuery<T>(path: string | null, liveRead = true): Query<T> {
             error instanceof ApiError &&
             ["INVALID_READ_FRONTIER", "READ_FRONTIER_EXPIRED"].includes(
               error.code,
-            )
+            ) &&
+            frontier &&
+            frontierRepairs === 0
           ) {
+            frontierRepairs++;
             live?.discardMinimum();
             dirty = true;
             continue;
@@ -137,7 +142,7 @@ export function useQuery<T>(path: string | null, liveRead = true): Query<T> {
       (!current ||
         (liveRead &&
           (state.revision !== snapshot.revision ||
-            snapshot.phase !== "connected")) ||
+            snapshot.phase === "offline")) ||
         !!state.error),
     reload: () => {
       appliedReset.current = -1;

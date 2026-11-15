@@ -43,12 +43,11 @@ export class LiveConnection {
       });
   };
   discardMinimum = () => {
-    if (this.active)
-      this.update({
-        frontier: null,
-        revision: this.state.revision + 1,
-        reset: this.state.reset + 1,
-      });
+    this.update({
+      frontier: null,
+      revision: this.state.revision + 1,
+      reset: this.state.reset + 1,
+    });
   };
   start = () => {
     this.active = true;
