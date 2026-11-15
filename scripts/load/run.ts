@@ -51,11 +51,51 @@ assertBenchmarkDatabase(db);
 let ownedDatabase = false;
 let observeCommands = false;
 const commandTimings = new Map<string, number[]>();
+const commandLabels = new Map<number, string>();
+const checkoutTimings: number[] = [];
+let activeConnections = 0,
+  peakConnections = 0,
+  checkoutFailures = 0;
+client.on("connectionCheckedOut", (event) => {
+  activeConnections++;
+  if (observeCommands) {
+    peakConnections = Math.max(peakConnections, activeConnections);
+    checkoutTimings.push(event.durationMS);
+  }
+});
+client.on("connectionCheckedIn", () => {
+  activeConnections--;
+});
+client.on("connectionCheckOutFailed", () => {
+  if (observeCommands) checkoutFailures++;
+});
+client.on("commandStarted", (event) => {
+  if (!observeCommands) return;
+  const collection = event.command[event.commandName];
+  const allowed = ["session", "people", "teams", "events", "outbox"];
+  const target =
+    typeof collection === "string" && allowed.includes(collection)
+      ? collection
+      : "other";
+  const concern =
+    event.command.autocommit === false
+      ? "snapshot"
+      : (event.command.readConcern?.level ?? "default");
+  commandLabels.set(
+    event.requestId,
+    `${event.commandName}:${target}:${concern}`,
+  );
+});
 client.on("commandSucceeded", (event) => {
   if (!observeCommands) return;
-  const list = commandTimings.get(event.commandName) ?? [];
+  const name = commandLabels.get(event.requestId) ?? event.commandName;
+  commandLabels.delete(event.requestId);
+  const list = commandTimings.get(name) ?? [];
   if (list.length < 100_000) list.push(event.duration);
-  commandTimings.set(event.commandName, list);
+  commandTimings.set(name, list);
+});
+client.on("commandFailed", (event) => {
+  commandLabels.delete(event.requestId);
 });
 const eventLoop = monitorEventLoopDelay({ resolution: 20 });
 class BenchmarkFailure extends Error {}
@@ -104,6 +144,7 @@ const report: Record<string, unknown> = {
     memoryBytes: os.totalmem(),
     freeMemoryBeforeBytes: os.freemem(),
     k6Image: image,
+    mongoMaxPoolSize: clientOptions.maxPoolSize,
   },
 };
 try {
@@ -312,6 +353,15 @@ try {
       ];
     }),
   );
+  checkoutTimings.sort((a, b) => a - b);
+  report.connectionPool = {
+    peakCheckedOut: peakConnections,
+    checkoutFailures,
+    checkoutSamples: checkoutTimings.length,
+    checkoutP95Ms:
+      checkoutTimings[Math.ceil(checkoutTimings.length * 0.95) - 1] ?? null,
+    checkoutMaxMs: checkoutTimings.at(-1) ?? null,
+  };
   report.eventLoop = {
     meanMs: eventLoop.mean / 1e6,
     p95Ms: eventLoop.percentile(95) / 1e6,
