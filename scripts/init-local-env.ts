@@ -5,7 +5,7 @@ const content = [
   "NODE_ENV=development",
   "APP_ORIGIN=http://localhost:3000",
   "HOST=127.0.0.1",
-  "PORT=3000",
+  "PORT=3001",
   "MONGODB_URI=mongodb://127.0.0.1:27027/?replicaSet=rs0&directConnection=true",
   "MONGODB_DATABASE=h4h_local",
   `BETTER_AUTH_SECRET=${randomBytes(32).toString("base64url")}`,

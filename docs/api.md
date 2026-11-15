@@ -5,6 +5,7 @@ All routes below are under `/api`. Authentication-provider routes under `/api/au
 | Method | Route | Purpose |
 |---|---|---|
 | GET | `/me` | Current signed-in identity. |
+| GET | `/events/:eventId` | Authenticated event name, team-size rules, formation deadline and optional dates, including before enrollment. |
 | POST | `/events/:eventId/enroll` | Enroll the current participant, `{}`. |
 | GET | `/events/:eventId/me` | Current event membership and size eligibility. |
 | GET / POST | `/events/:eventId/profile` | Read or replace the current participant's event profile. |
@@ -42,3 +43,7 @@ Suggestions accept `limit` and `unrankedLimit` (1–25, default 10), plus `unran
 Typical statuses: 400 invalid input, 401 no valid session, 403 forbidden, 404 unavailable resource, 409 domain conflict, 429 known rate limit and 503 required infrastructure unavailable. Operation lookup uses 202 for unresolved observations and 200 with `originalStatus` for a terminal historical result.
 
 Event view reads accept `X-Read-Frontier` from a live frame. A successful read returns an acknowledgement in the same header only after confirming its minimum snapshot with majority durability. This applies to board, suggestions, event membership/profile, team, history, requests and invitation views. Historical operation lookup has its own reconciliation semantics. `X-Snapshot-Mode` defaults to `reset`; `refresh` requires a frontier and allows overlapping public board projections to share work. Private projections are not shared. See [live updates](live-updates.md) for connection and recovery behavior.
+
+Current member team summaries include a roster of participant IDs and display names. Outsiders receive no roster or member-ID array. Request lists include basic applicant/team display names alongside their authorized statuses. No email addresses or authentication credentials are included.
+
+Browser requests can send `X-Actor-Id` with their expected identity. A mismatch with the signed session returns `409 ACTOR_CHANGED` before any handler runs. Receipt lookups use the same guard, preventing an unresolved intent from being retried under a different shared browser session.

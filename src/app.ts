@@ -14,7 +14,7 @@ import {
 } from "mongodb";
 import { z, ZodError } from "zod";
 import type { AuthHttp } from "./auth.js";
-import { Membership, type HistoryCursor } from "./membership.js";
+import { Membership, type HistoryCursor, type Event } from "./membership.js";
 import { Operations, type Intent } from "./operations.js";
 import { InviteLimiter } from "./invite-limiter.js";
 import { Discovery } from "./discovery.js";
@@ -28,6 +28,7 @@ import { currentPerson } from "./current-reads.js";
 import { LiveReads, type ProjectionRead } from "./live-reads.js";
 import type { CommandReply } from "./operations.js";
 import { RateLimiterMongo, RateLimiterRes } from "rate-limiter-flexible";
+import { mountWeb } from "./web.js";
 
 type Actor = { id: string; name: string; expiresAt: Date };
 type Dependencies = {
@@ -39,6 +40,7 @@ type Dependencies = {
   logger?: Logger;
   isReady?: () => boolean;
   live?: LiveSource;
+  webDirectory?: string;
 };
 export class ApiError extends Error {
   constructor(
@@ -242,7 +244,11 @@ export function createApp(options?: Dependencies) {
       ) => Promise<void>,
     ): RequestHandler =>
     async (request, response) => {
-      await handler(request, response, await identify(request));
+      const actor = await identify(request);
+      const expectedActor = request.get("X-Actor-Id");
+      if (expectedActor !== undefined && expectedActor !== actor.id)
+        throw new ApiError(409, "ACTOR_CHANGED");
+      await handler(request, response, actor);
     };
   app.get(
     "/api/me",
@@ -302,6 +308,31 @@ export function createApp(options?: Dependencies) {
         key: z.uuid().parse(request.params.key),
       });
       response.status(reply.status).json(reply.body);
+    }),
+  );
+  app.get(
+    "/api/events/:eventId",
+    authenticated(async (request, response) => {
+      z.strictObject({}).parse(request.query);
+      const event = await options.db.collection<Event>("events").findOne(
+        { _id: z.uuid().parse(request.params.eventId) },
+        {
+          readConcern: { level: "linearizable" },
+          readPreference: "primary",
+          maxTimeMS: 1_500,
+        },
+      );
+      if (!event) throw new ApiError(404, "EVENT_NOT_FOUND");
+      response.json({
+        id: event._id,
+        name: event.name,
+        minSize: event.minSize,
+        maxSize: event.maxSize,
+        admissionClosesAt: event.admissionClosesAt,
+        admissionsOpen: event.admissionClosesAt > new Date(),
+        startsAt: event.startsAt ?? null,
+        endsAt: event.endsAt ?? null,
+      });
     }),
   );
   app.get(
@@ -688,11 +719,12 @@ export function createApp(options?: Dependencies) {
           context,
         );
         if (reply.status === 200 && typeof reply.body.code === "string")
-          reply.body.link = `${options.origin}/join#code=${reply.body.code}`;
+          reply.body.link = `${options.origin}/join?event=${scope.eventId}#code=${reply.body.code}`;
         return reply;
       });
     }),
   );
+  if (options.webDirectory) mountWeb(app, options.webDirectory);
   app.use((_request, response) => {
     response.status(404).json({ code: "NOT_FOUND" });
   });

@@ -20,7 +20,7 @@ A refresh opens a new causally consistent session, advances it to the required o
 
 `X-Snapshot-Mode: reset` is the default and always executes a fresh read. Use it for initial connection, reconnection, focus recovery and periodic reconciliation. `refresh` requires a valid frontier. Overlapping refresh-mode public board reads with the same normalized query, generation and minimum can share one in-flight projection after each caller's enrollment is checked. The table holds at most 64 keys and removes completed work. A newer minimum starts different work. Private views are never shared; no completed projection cache is retained. Responses use `Cache-Control: no-store`.
 
-Clients must track generation and successful snapshot completion separately from heartbeat arrival. A hint during a fetch marks the view dirty so another refresh follows it. Reconnects require a fresh snapshot; old in-flight responses must not overwrite newer state. Time-based eligibility and missed hints also require periodic reconciliation, for example every 30 seconds with jitter while visible and online. The browser implementation is not included yet.
+Clients must track generation and successful snapshot completion separately from heartbeat arrival. A hint during a fetch marks the view dirty so another refresh follows it. Reconnects require a fresh snapshot; old in-flight responses must not overwrite newer state. Time-based eligibility and missed hints also require periodic reconciliation, for example every 30 seconds with jitter while visible and online. The React client implements these rules; see [browser behavior](browser.md). Hosted proxy behavior remains unverified.
 
 ## Verification limits
 

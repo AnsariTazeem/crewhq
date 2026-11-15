@@ -1,32 +1,8 @@
 import { z } from "zod";
 
-export const skillCatalog = [
-  "typescript",
-  "javascript",
-  "python",
-  "java",
-  "go",
-  "rust",
-  "cpp",
-  "react",
-  "nextjs",
-  "nodejs",
-  "fastapi",
-  "django",
-  "postgresql",
-  "mongodb",
-  "redis",
-  "docker",
-  "aws",
-  "ui-design",
-  "ux-research",
-  "testing",
-  "ml",
-  "data-analysis",
-  "devops",
-  "product",
-  "pitching",
-] as const;
+import { skillCatalog } from "./skill-catalog.js";
+export { skillCatalog } from "./skill-catalog.js";
+
 const aliases: Record<string, string> = {
   ts: "typescript",
   js: "javascript",
