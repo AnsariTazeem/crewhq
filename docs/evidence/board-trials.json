@@ -1,0 +1,1505 @@
+[
+  {
+    "actionsRunId": null,
+    "report": {
+      "runId": "2026-11-15T07-30-10-545Z-78431c82",
+      "outcome": "failed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.14.1",
+        "platform": "win32",
+        "cpuModel": "Intel(R) Core(TM) 3 100U",
+        "logicalCpus": 8,
+        "memoryBytes": 8259321856,
+        "freeMemoryBeforeBytes": 777863168,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276"
+      },
+      "revision": "5e85148b6d92bb08bdfdbe4640d7b5111ea5f2a4",
+      "workingTreeDirty": true,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "mongodb": "8.0.38",
+      "generatorExitCode": 99,
+      "result": {
+        "samples": 3410,
+        "validRate": 1,
+        "p95Ms": 1892.6584346,
+        "participants": 100,
+        "measuredElapsedSeconds": 61.435666727999994,
+        "requestsPerSecond": 55.50521678388255,
+        "people": {
+          "max": 2770.12042,
+          "p(90)": 1206.2816622,
+          "p(95)": 1859.8585747999998,
+          "p(99)": 2609.3220361600006,
+          "count": 1707,
+          "min": 65.058824,
+          "avg": 774.744770763914,
+          "med": 679.547007
+        },
+        "teams": {
+          "p(99)": 2668.1117176200005,
+          "count": 1703,
+          "min": 54.441473,
+          "avg": 785.5268796236059,
+          "med": 683.980927,
+          "max": 2767.77672,
+          "p(90)": 1236.4089946000001,
+          "p(95)": 1899.4036915
+        }
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  },
+  {
+    "actionsRunId": null,
+    "report": {
+      "runId": "2026-11-15T07-35-43-171Z-0f180c07",
+      "outcome": "failed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.14.1",
+        "platform": "win32",
+        "cpuModel": "Intel(R) Core(TM) 3 100U",
+        "logicalCpus": 8,
+        "memoryBytes": 8259321856,
+        "freeMemoryBeforeBytes": 942800896,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276"
+      },
+      "revision": "5e85148b6d92bb08bdfdbe4640d7b5111ea5f2a4",
+      "workingTreeDirty": true,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "mongodb": "8.0.38",
+      "generatorExitCode": 99,
+      "result": {
+        "samples": 3652,
+        "validRate": 1,
+        "p95Ms": 1308.5775758999998,
+        "participants": 100,
+        "measuredElapsedSeconds": 61.291576248,
+        "requestsPerSecond": 59.58404439173105,
+        "people": {
+          "min": 85.837835,
+          "avg": 655.1491234136989,
+          "med": 606.513419,
+          "max": 2711.491997,
+          "p(90)": 1061.3182542000004,
+          "p(95)": 1235.7111883999999,
+          "p(99)": 2433.8805343599997,
+          "count": 1825
+        },
+        "teams": {
+          "avg": 667.2428430613023,
+          "med": 609.394736,
+          "max": 2678.810786,
+          "p(90)": 1094.8534698,
+          "p(95)": 1331.707712799999,
+          "p(99)": 2450.63076478,
+          "count": 1827,
+          "min": 73.425584
+        }
+      },
+      "driverCommands": {
+        "aggregate": {
+          "count": 4065,
+          "meanMs": 61.142927429274295,
+          "p95Ms": 146,
+          "maxMs": 609
+        },
+        "find": {
+          "count": 20325,
+          "meanMs": 92.30238622386224,
+          "p95Ms": 209,
+          "maxMs": 748
+        },
+        "commitTransaction": {
+          "count": 4065,
+          "meanMs": 99.58376383763837,
+          "p95Ms": 394,
+          "maxMs": 863
+        }
+      },
+      "eventLoop": {
+        "meanMs": 41.20297789695291,
+        "p95Ms": 104.529919,
+        "maxMs": 652.738559
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  },
+  {
+    "actionsRunId": 43691890992,
+    "report": {
+      "runId": "2026-11-15T07-53-01-752Z-1a772151",
+      "outcome": "failed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.22.2",
+        "platform": "linux",
+        "cpuModel": "AMD EPYC 7763 64-Core Processor",
+        "logicalCpus": 4,
+        "memoryBytes": 16759439360,
+        "freeMemoryBeforeBytes": 15082393600,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276"
+      },
+      "revision": "5c5041a518006993da4683f5b6a54bcb74c43eef",
+      "workingTreeDirty": false,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "k6Version": "k6 v2.4.0 (commit/dd9395906d, go1.27.3, linux/amd64)",
+      "mongodb": "8.0.38",
+      "generatorExitCode": 99,
+      "result": {
+        "samples": 5000,
+        "validRate": 1,
+        "p95Ms": 274.7718455000001,
+        "participants": 100,
+        "measuredElapsedSeconds": 60.926601071,
+        "requestsPerSecond": 82.06595989448545,
+        "people": {
+          "p(99)": 408.50981522999945,
+          "count": 2500,
+          "min": 48.14072,
+          "avg": 210.17565679720016,
+          "med": 204.6167775,
+          "max": 434.314067,
+          "p(90)": 240.78140449999998,
+          "p(95)": 275.6989783499996
+        },
+        "teams": {
+          "min": 60.519751,
+          "avg": 212.75810312199997,
+          "med": 207.157347,
+          "max": 435.181041,
+          "p(90)": 243.8665406,
+          "p(95)": 273.5744810999998,
+          "p(99)": 406.70881323999987,
+          "count": 2500
+        }
+      },
+      "driverCommands": {
+        "aggregate": {
+          "count": 5826,
+          "meanMs": 7.438208032955716,
+          "p95Ms": 24,
+          "maxMs": 88
+        },
+        "find": {
+          "count": 29130,
+          "meanMs": 35.86604874699622,
+          "p95Ms": 91,
+          "maxMs": 142
+        },
+        "commitTransaction": {
+          "count": 5826,
+          "meanMs": 13.811877789220734,
+          "p95Ms": 31,
+          "maxMs": 89
+        }
+      },
+      "eventLoop": {
+        "meanMs": 21.692588331707316,
+        "p95Ms": 30.818303,
+        "maxMs": 65.601535
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  },
+  {
+    "actionsRunId": null,
+    "report": {
+      "runId": "2026-11-15T08-04-21-160Z-2655126c",
+      "outcome": "failed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.14.1",
+        "platform": "win32",
+        "cpuModel": "Intel(R) Core(TM) 3 100U",
+        "logicalCpus": 8,
+        "memoryBytes": 8259321856,
+        "freeMemoryBeforeBytes": 694706176,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276"
+      },
+      "revision": "187b87c28dd17bf0db22f72a61b327a406c12f68",
+      "workingTreeDirty": true,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "k6Version": "k6 v2.4.0 (commit/dd9395906d, go1.27.3, linux/amd64)",
+      "mongodb": "8.0.38",
+      "generatorExitCode": 99,
+      "result": {
+        "samples": 2582,
+        "validRate": 1,
+        "p95Ms": 3022.6891977,
+        "participants": 100,
+        "measuredElapsedSeconds": 61.268313631,
+        "requestsPerSecond": 42.14250151474028,
+        "people": {
+          "count": 1292,
+          "min": 69.052325,
+          "avg": 1330.3668747151717,
+          "med": 1018.217175,
+          "max": 4652.10745,
+          "p(90)": 2762.9079014000004,
+          "p(95)": 3033.6455978500007,
+          "p(99)": 4432.91113649
+        },
+        "teams": {
+          "p(99)": 4443.42578571,
+          "count": 1290,
+          "min": 58.865439,
+          "avg": 1332.2017391713177,
+          "med": 1023.661014,
+          "max": 4654.312788,
+          "p(90)": 2765.974087,
+          "p(95)": 3014.43977205
+        }
+      },
+      "driverCommands": {
+        "aggregate": {
+          "count": 3008,
+          "meanMs": 140.34242021276594,
+          "p95Ms": 427,
+          "maxMs": 814
+        },
+        "find": {
+          "count": 15040,
+          "meanMs": 178.46595744680852,
+          "p95Ms": 516,
+          "maxMs": 1657
+        },
+        "commitTransaction": {
+          "count": 3008,
+          "meanMs": 187.64893617021278,
+          "p95Ms": 553,
+          "maxMs": 799
+        }
+      },
+      "eventLoop": {
+        "meanMs": 66.00580099644128,
+        "p95Ms": 209.453055,
+        "maxMs": 816.840703
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  },
+  {
+    "actionsRunId": 43693364648,
+    "report": {
+      "runId": "2026-11-15T08-12-23-179Z-f6a7b7c4",
+      "outcome": "failed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.22.2",
+        "platform": "linux",
+        "cpuModel": "AMD EPYC 7763 64-Core Processor",
+        "logicalCpus": 4,
+        "memoryBytes": 16759439360,
+        "freeMemoryBeforeBytes": 15330066432,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276"
+      },
+      "revision": "29cae9760b515378610d764fb579c3ee3a8b954e",
+      "workingTreeDirty": false,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "k6Version": "k6 v2.4.0 (commit/dd9395906d, go1.27.3, linux/amd64)",
+      "mongodb": "8.0.38",
+      "generatorExitCode": 99,
+      "result": {
+        "samples": 5367,
+        "validRate": 1,
+        "p95Ms": 222.47643829999993,
+        "participants": 100,
+        "measuredElapsedSeconds": 60.876193058000005,
+        "requestsPerSecond": 88.1625431946208,
+        "people": {
+          "min": 13.687438,
+          "avg": 124.19167763240233,
+          "med": 114.486258,
+          "max": 503.476942,
+          "p(90)": 182.1953926,
+          "p(95)": 218.8796125999998,
+          "p(99)": 421.8009196399998,
+          "count": 2685
+        },
+        "teams": {
+          "p(99)": 419.1444843700004,
+          "count": 2682,
+          "min": 16.221894,
+          "avg": 127.82181784377336,
+          "med": 116.7711725,
+          "max": 519.131928,
+          "p(90)": 190.83050820000003,
+          "p(95)": 224.27061194999996
+        }
+      },
+      "driverCommands": {
+        "aggregate": {
+          "count": 6267,
+          "meanMs": 11.04818892612095,
+          "p95Ms": 34,
+          "maxMs": 73
+        },
+        "find": {
+          "count": 31335,
+          "meanMs": 26.199489388862293,
+          "p95Ms": 84,
+          "maxMs": 142
+        },
+        "commitTransaction": {
+          "count": 6267,
+          "meanMs": 11.301101005265677,
+          "p95Ms": 31,
+          "maxMs": 80
+        }
+      },
+      "eventLoop": {
+        "meanMs": 21.667448241242766,
+        "p95Ms": 30.097407,
+        "maxMs": 59.539455
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  },
+  {
+    "actionsRunId": 43694347099,
+    "report": {
+      "runId": "2026-11-15T08-24-54-575Z-2ec7cbb9",
+      "outcome": "passed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.22.2",
+        "platform": "linux",
+        "cpuModel": "Intel(R) Xeon(R) 6975P-C",
+        "logicalCpus": 4,
+        "memoryBytes": 16463400960,
+        "freeMemoryBeforeBytes": 14882390016,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276",
+        "mongoMaxPoolSize": 100
+      },
+      "revision": "d67da9fc537903b365ca7dc4a739a4d6fae6bee0",
+      "workingTreeDirty": false,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "k6Version": "k6 v2.4.0 (commit/dd9395906d, go1.27.3, linux/amd64)",
+      "mongodb": "8.0.38",
+      "generatorExitCode": 0,
+      "result": {
+        "samples": 5456,
+        "validRate": 1,
+        "p95Ms": 153.29711125,
+        "participants": 100,
+        "measuredElapsedSeconds": 61.05760808200001,
+        "requestsPerSecond": 89.3582335009361,
+        "people": {
+          "p(99)": 283.41088659,
+          "count": 2732,
+          "min": 19.153868,
+          "avg": 104.94911671412868,
+          "med": 99.957751,
+          "max": 309.383113,
+          "p(90)": 129.2134995,
+          "p(95)": 151.59350159999997
+        },
+        "teams": {
+          "p(90)": 132.9785467,
+          "p(95)": 154.50889924999998,
+          "p(99)": 283.50075058,
+          "count": 2724,
+          "min": 7.77306,
+          "avg": 107.82019798421443,
+          "med": 102.5762915,
+          "max": 309.983532
+        }
+      },
+      "driverCommands": {
+        "aggregate:session:majority": {
+          "count": 6371,
+          "meanMs": 9.549835190707896,
+          "p95Ms": 27,
+          "maxMs": 58
+        },
+        "find:people:linearizable": {
+          "count": 6371,
+          "meanMs": 40.11787788416261,
+          "p95Ms": 83,
+          "maxMs": 137
+        },
+        "find:session:linearizable": {
+          "count": 6371,
+          "meanMs": 39.821535080835034,
+          "p95Ms": 83,
+          "maxMs": 173
+        },
+        "find:outbox:snapshot": {
+          "count": 6371,
+          "meanMs": 9.522680897818239,
+          "p95Ms": 21,
+          "maxMs": 66
+        },
+        "find:events:snapshot": {
+          "count": 6371,
+          "meanMs": 8.83989954481243,
+          "p95Ms": 20,
+          "maxMs": 68
+        },
+        "find:teams:snapshot": {
+          "count": 3180,
+          "meanMs": 13.829874213836478,
+          "p95Ms": 33,
+          "maxMs": 76
+        },
+        "find:people:snapshot": {
+          "count": 3191,
+          "meanMs": 11.080852397367597,
+          "p95Ms": 27,
+          "maxMs": 72
+        },
+        "commitTransaction:other:snapshot": {
+          "count": 6371,
+          "meanMs": 10.08774132789201,
+          "p95Ms": 25,
+          "maxMs": 67
+        }
+      },
+      "connectionPool": {
+        "peakCheckedOut": 100,
+        "checkoutFailures": 0,
+        "checkoutSamples": 44597,
+        "checkoutP95Ms": 0,
+        "checkoutMaxMs": 143
+      },
+      "eventLoop": {
+        "meanMs": 21.052199815493793,
+        "p95Ms": 26.509311,
+        "maxMs": 63.242239
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  },
+  {
+    "actionsRunId": 43711675478,
+    "report": {
+      "runId": "2026-11-15T12-01-20-248Z-f1f8b662",
+      "outcome": "failed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.22.2",
+        "platform": "linux",
+        "cpuModel": "AMD EPYC 7763 64-Core Processor",
+        "logicalCpus": 4,
+        "memoryBytes": 16759439360,
+        "freeMemoryBeforeBytes": 15306821632,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276",
+        "mongoMaxPoolSize": 100
+      },
+      "revision": "d10b0d1b073e542e11664c1264efb8a2e114f769",
+      "workingTreeDirty": false,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "k6Version": "k6 v2.4.0 (commit/dd9395906d, go1.27.3, linux/amd64)",
+      "mongodb": "8.0.38",
+      "generatorExitCode": 99,
+      "result": {
+        "samples": 5339,
+        "validRate": 1,
+        "p95Ms": 241.96939729999994,
+        "participants": 100,
+        "measuredElapsedSeconds": 61.093601449,
+        "requestsPerSecond": 87.39049382212171,
+        "people": {
+          "p(99)": 379.39287784999993,
+          "count": 2666,
+          "min": 11.726856,
+          "avg": 130.4992184876219,
+          "med": 121.846445,
+          "max": 451.774974,
+          "p(90)": 168.3064025,
+          "p(95)": 239.91987325
+        },
+        "teams": {
+          "min": 9.745709,
+          "avg": 132.63674970557415,
+          "med": 122.816161,
+          "max": 454.596308,
+          "p(90)": 173.7779202,
+          "p(95)": 245.84850920000014,
+          "p(99)": 379.3353037200004,
+          "count": 2673
+        }
+      },
+      "driverCommands": {
+        "aggregate:session:majority": {
+          "count": 6239,
+          "meanMs": 13.279852540471229,
+          "p95Ms": 33,
+          "maxMs": 66
+        },
+        "find:people:linearizable": {
+          "count": 6239,
+          "meanMs": 42.515948068600736,
+          "p95Ms": 92,
+          "maxMs": 165
+        },
+        "find:session:linearizable": {
+          "count": 6239,
+          "meanMs": 41.823849975957685,
+          "p95Ms": 92,
+          "maxMs": 167
+        },
+        "find:outbox:snapshot": {
+          "count": 6239,
+          "meanMs": 12.202115723673666,
+          "p95Ms": 28,
+          "maxMs": 87
+        },
+        "find:events:snapshot": {
+          "count": 6239,
+          "meanMs": 11.820804616124379,
+          "p95Ms": 25,
+          "maxMs": 53
+        },
+        "find:people:snapshot": {
+          "count": 3116,
+          "meanMs": 14.646341463414634,
+          "p95Ms": 34,
+          "maxMs": 82
+        },
+        "find:teams:snapshot": {
+          "count": 3123,
+          "meanMs": 16.823887287864235,
+          "p95Ms": 39,
+          "maxMs": 90
+        },
+        "commitTransaction:other:snapshot": {
+          "count": 6239,
+          "meanMs": 12.653630389485494,
+          "p95Ms": 30,
+          "maxMs": 113
+        }
+      },
+      "connectionPool": {
+        "peakCheckedOut": 100,
+        "checkoutFailures": 0,
+        "checkoutSamples": 43673,
+        "checkoutP95Ms": 1,
+        "checkoutMaxMs": 212
+      },
+      "eventLoop": {
+        "meanMs": 21.94125776438019,
+        "p95Ms": 31.670271,
+        "maxMs": 71.303167
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  },
+  {
+    "actionsRunId": 43713623384,
+    "report": {
+      "runId": "2026-11-15T12-24-23-121Z-e613e23d",
+      "outcome": "passed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.22.2",
+        "platform": "linux",
+        "cpuModel": "Intel(R) Xeon(R) 6973P-C",
+        "logicalCpus": 4,
+        "memoryBytes": 16758398976,
+        "freeMemoryBeforeBytes": 15276376064,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276",
+        "mongoMaxPoolSize": 100
+      },
+      "revision": "f6c1ab9c2f9a0fc4efb2ee8f93bacaf34b5fd52c",
+      "workingTreeDirty": false,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "k6Version": "k6 v2.4.0 (commit/dd9395906d, go1.27.3, linux/amd64)",
+      "mongodb": "8.0.38",
+      "generatorExitCode": 0,
+      "result": {
+        "samples": 5511,
+        "validRate": 1,
+        "p95Ms": 168.0973665,
+        "participants": 100,
+        "measuredElapsedSeconds": 60.94464677999999,
+        "requestsPerSecond": 90.42631783384996,
+        "people": {
+          "max": 359.791965,
+          "p(90)": 134.63880070000002,
+          "p(95)": 169.23581445000002,
+          "p(99)": 310.67622955999997,
+          "count": 2758,
+          "min": 12.522819,
+          "avg": 95.45489349383621,
+          "med": 88.121004
+        },
+        "teams": {
+          "p(99)": 314.69199688000003,
+          "count": 2753,
+          "min": 11.942322,
+          "avg": 97.52080432509956,
+          "med": 89.419103,
+          "max": 360.141895,
+          "p(90)": 135.99314920000003,
+          "p(95)": 167.02144200000006
+        }
+      },
+      "driverCommands": {
+        "aggregate:session:majority": {
+          "count": 6454,
+          "meanMs": 7.2045243259993805,
+          "p95Ms": 24,
+          "maxMs": 56
+        },
+        "find:session:linearizable": {
+          "count": 6454,
+          "meanMs": 40.74527424852805,
+          "p95Ms": 90,
+          "maxMs": 128
+        },
+        "find:people:linearizable": {
+          "count": 6454,
+          "meanMs": 41.045863030678646,
+          "p95Ms": 89,
+          "maxMs": 134
+        },
+        "find:events:snapshot": {
+          "count": 6454,
+          "meanMs": 10.208862720793306,
+          "p95Ms": 21,
+          "maxMs": 47
+        },
+        "find:people:snapshot": {
+          "count": 3229,
+          "meanMs": 10.971198513471663,
+          "p95Ms": 22,
+          "maxMs": 48
+        },
+        "commitTransaction:other:snapshot": {
+          "count": 6454,
+          "meanMs": 9.880229315153393,
+          "p95Ms": 24,
+          "maxMs": 67
+        },
+        "find:teams:snapshot": {
+          "count": 3225,
+          "meanMs": 12.71782945736434,
+          "p95Ms": 26,
+          "maxMs": 54
+        }
+      },
+      "connectionPool": {
+        "peakCheckedOut": 100,
+        "checkoutFailures": 0,
+        "checkoutSamples": 38724,
+        "checkoutP95Ms": 0,
+        "checkoutMaxMs": 96
+      },
+      "eventLoop": {
+        "meanMs": 21.00614311189843,
+        "p95Ms": 26.279935,
+        "maxMs": 58.720255
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  },
+  {
+    "actionsRunId": 43714456222,
+    "report": {
+      "runId": "2026-11-15T12-33-56-954Z-0232cdf8",
+      "outcome": "passed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.22.2",
+        "platform": "linux",
+        "cpuModel": "AMD EPYC 9V45 96-Core Processor",
+        "logicalCpus": 4,
+        "memoryBytes": 16759439360,
+        "freeMemoryBeforeBytes": 15341400064,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276",
+        "mongoMaxPoolSize": 100
+      },
+      "revision": "5a172250ccdb65347fde1f32ad7e3bbad2bf989a",
+      "workingTreeDirty": false,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "k6Version": "k6 v2.4.0 (commit/dd9395906d, go1.27.3, linux/amd64)",
+      "mongodb": "8.0.38",
+      "generatorExitCode": 0,
+      "result": {
+        "samples": 5635,
+        "validRate": 1,
+        "p95Ms": 141.3445572,
+        "participants": 100,
+        "measuredElapsedSeconds": 60.90587969400001,
+        "requestsPerSecond": 92.51980315055064,
+        "people": {
+          "p(99)": 229.0596484000001,
+          "count": 2821,
+          "min": 9.695657,
+          "avg": 71.16918480255232,
+          "med": 60.132659,
+          "max": 273.796873,
+          "p(90)": 113.239332,
+          "p(95)": 138.862264
+        },
+        "teams": {
+          "avg": 71.27041430206104,
+          "med": 60.2515335,
+          "max": 272.862262,
+          "p(90)": 115.57063180000003,
+          "p(95)": 143.71396289999993,
+          "p(99)": 235.37075321999993,
+          "count": 2814,
+          "min": 6.925423
+        }
+      },
+      "driverCommands": {
+        "aggregate:session:majority": {
+          "count": 6543,
+          "meanMs": 5.936726272352132,
+          "p95Ms": 21,
+          "maxMs": 54
+        },
+        "find:session:linearizable": {
+          "count": 6543,
+          "meanMs": 35.854195323246216,
+          "p95Ms": 87,
+          "maxMs": 134
+        },
+        "find:people:linearizable": {
+          "count": 6543,
+          "meanMs": 35.9283203423506,
+          "p95Ms": 87,
+          "maxMs": 131
+        },
+        "find:events:snapshot": {
+          "count": 6543,
+          "meanMs": 8.421672015894849,
+          "p95Ms": 24,
+          "maxMs": 47
+        },
+        "find:teams:snapshot": {
+          "count": 3267,
+          "meanMs": 9.76216712580349,
+          "p95Ms": 23,
+          "maxMs": 54
+        },
+        "find:people:snapshot": {
+          "count": 3276,
+          "meanMs": 9.062881562881563,
+          "p95Ms": 21,
+          "maxMs": 54
+        },
+        "commitTransaction:other:snapshot": {
+          "count": 6543,
+          "meanMs": 8.0646492434663,
+          "p95Ms": 25,
+          "maxMs": 56
+        }
+      },
+      "connectionPool": {
+        "peakCheckedOut": 100,
+        "checkoutFailures": 0,
+        "checkoutSamples": 39258,
+        "checkoutP95Ms": 8,
+        "checkoutMaxMs": 135
+      },
+      "eventLoop": {
+        "meanMs": 20.64582074513223,
+        "p95Ms": 23.674879,
+        "maxMs": 49.381375
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  },
+  {
+    "actionsRunId": 43716234399,
+    "report": {
+      "runId": "2026-11-15T12-55-09-051Z-f80824ee",
+      "outcome": "failed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.22.2",
+        "platform": "linux",
+        "cpuModel": "AMD EPYC 7763 64-Core Processor",
+        "logicalCpus": 4,
+        "memoryBytes": 16759439360,
+        "freeMemoryBeforeBytes": 15310716928,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276",
+        "mongoMaxPoolSize": 100
+      },
+      "revision": "ed910d7ef4fea475ff56be4a14a0d0379b997b26",
+      "workingTreeDirty": false,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "k6Version": "k6 v2.4.0 (commit/dd9395906d, go1.27.3, linux/amd64)",
+      "mongodb": "8.0.38",
+      "generatorExitCode": 99,
+      "result": {
+        "samples": 5433,
+        "validRate": 1,
+        "p95Ms": 204.1046129999999,
+        "participants": 100,
+        "measuredElapsedSeconds": 60.922237202000005,
+        "requestsPerSecond": 89.17925948756263,
+        "people": {
+          "avg": 111.59906968173469,
+          "med": 94.287904,
+          "max": 406.23209,
+          "p(90)": 178.512943,
+          "p(95)": 200.092495,
+          "p(99)": 307.5925974000001,
+          "count": 2721,
+          "min": 12.526674
+        },
+        "teams": {
+          "max": 406.196318,
+          "p(90)": 186.7787476,
+          "p(95)": 205.91604649999996,
+          "p(99)": 309.21343840999964,
+          "count": 2712,
+          "min": 12.626685,
+          "avg": 113.49708693030976,
+          "med": 96.114101
+        }
+      },
+      "driverCommands": {
+        "aggregate:session:majority": {
+          "count": 6346,
+          "meanMs": 9.9845572013867,
+          "p95Ms": 36,
+          "maxMs": 75
+        },
+        "find:session:linearizable": {
+          "count": 6346,
+          "meanMs": 44.85786322092657,
+          "p95Ms": 95,
+          "maxMs": 142
+        },
+        "find:people:linearizable": {
+          "count": 6346,
+          "meanMs": 45.48786637251812,
+          "p95Ms": 95,
+          "maxMs": 143
+        },
+        "find:events:snapshot": {
+          "count": 6346,
+          "meanMs": 12.129057674125434,
+          "p95Ms": 28,
+          "maxMs": 68
+        },
+        "find:people:snapshot": {
+          "count": 3178,
+          "meanMs": 14.782567652611705,
+          "p95Ms": 36,
+          "maxMs": 78
+        },
+        "find:teams:snapshot": {
+          "count": 3168,
+          "meanMs": 16.758838383838384,
+          "p95Ms": 40,
+          "maxMs": 86
+        },
+        "commitTransaction:other:snapshot": {
+          "count": 6346,
+          "meanMs": 11.638985187519697,
+          "p95Ms": 32,
+          "maxMs": 109
+        }
+      },
+      "connectionPool": {
+        "peakCheckedOut": 100,
+        "checkoutFailures": 0,
+        "checkoutSamples": 38076,
+        "checkoutP95Ms": 0,
+        "checkoutMaxMs": 203
+      },
+      "eventLoop": {
+        "meanMs": 21.415899637676798,
+        "p95Ms": 29.032447,
+        "maxMs": 79.953919
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  },
+  {
+    "actionsRunId": 43739157853,
+    "report": {
+      "runId": "2026-11-15T17-06-27-053Z-fa63033d",
+      "outcome": "passed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.22.2",
+        "platform": "linux",
+        "cpuModel": "Intel(R) Xeon(R) 6975P-C",
+        "logicalCpus": 4,
+        "memoryBytes": 16463409152,
+        "freeMemoryBeforeBytes": 14983127040,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276",
+        "mongoMaxPoolSize": 100
+      },
+      "revision": "4b0ee470463321c3fac7634c47ac5d4272541166",
+      "workingTreeDirty": false,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "k6Version": "k6 v2.4.0 (commit/dd9395906d, go1.27.3, linux/amd64)",
+      "mongodb": "8.0.38",
+      "databaseSettings": {
+        "journalCommitIntervalMs": 10,
+        "majorityJournalDefault": true,
+        "replicaSetMembers": 1
+      },
+      "generatorExitCode": 0,
+      "result": {
+        "samples": 5900,
+        "validRate": 1,
+        "p95Ms": 71.15318035000006,
+        "participants": 100,
+        "measuredElapsedSeconds": 60.91230308899999,
+        "requestsPerSecond": 96.86056347893152,
+        "people": {
+          "med": 15.0693175,
+          "max": 267.204243,
+          "p(90)": 28.006440399999974,
+          "p(95)": 67.12406199999985,
+          "p(99)": 231.76583590999996,
+          "count": 2950,
+          "min": 5.43123,
+          "avg": 24.583781637288073
+        },
+        "teams": {
+          "min": 4.566574,
+          "avg": 25.60896563593226,
+          "med": 16.031497,
+          "max": 266.632581,
+          "p(90)": 30.50448059999999,
+          "p(95)": 71.31535384999991,
+          "p(99)": 235.26236581999885,
+          "count": 2950
+        }
+      },
+      "driverCommands": {
+        "aggregate:session:majority": {
+          "count": 6900,
+          "meanMs": 2.4994202898550726,
+          "p95Ms": 11,
+          "maxMs": 32
+        },
+        "find:session:linearizable": {
+          "count": 6900,
+          "meanMs": 6.609710144927536,
+          "p95Ms": 14,
+          "maxMs": 52
+        },
+        "find:people:linearizable": {
+          "count": 6900,
+          "meanMs": 6.712463768115942,
+          "p95Ms": 14,
+          "maxMs": 47
+        },
+        "find:events:snapshot": {
+          "count": 6900,
+          "meanMs": 2.3817391304347826,
+          "p95Ms": 8,
+          "maxMs": 39
+        },
+        "find:teams:snapshot": {
+          "count": 3450,
+          "meanMs": 3.784927536231884,
+          "p95Ms": 12,
+          "maxMs": 46
+        },
+        "find:people:snapshot": {
+          "count": 3450,
+          "meanMs": 2.7863768115942027,
+          "p95Ms": 10,
+          "maxMs": 50
+        },
+        "commitTransaction:other:snapshot": {
+          "count": 6900,
+          "meanMs": 2.7427536231884058,
+          "p95Ms": 9,
+          "maxMs": 42
+        }
+      },
+      "connectionPool": {
+        "peakCheckedOut": 57,
+        "checkoutFailures": 0,
+        "checkoutSamples": 41400,
+        "checkoutP95Ms": 0,
+        "checkoutMaxMs": 86
+      },
+      "eventLoop": {
+        "meanMs": 20.35598626475645,
+        "p95Ms": 21.413887,
+        "maxMs": 45.219839
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  },
+  {
+    "actionsRunId": 43740517704,
+    "report": {
+      "runId": "2026-11-15T17-20-37-183Z-4f8d3d91",
+      "outcome": "passed",
+      "profile": {
+        "users": 100,
+        "warmupSeconds": 10,
+        "measuredSeconds": 60,
+        "thinkingSeconds": 1,
+        "workload": "50/50 people/teams; first page, skill, search and next page; authenticated reset snapshots",
+        "authentication": "100 distinct genuine signed sessions prepared outside timed traffic; external Google consent excluded",
+        "p95TargetMsExclusive": 200,
+        "requiredValidRate": 1,
+        "minimumSamples": 1000
+      },
+      "environment": {
+        "scope": "loopback, single API process and MongoDB replica set; generator shares this machine",
+        "node": "v24.22.2",
+        "platform": "linux",
+        "cpuModel": "AMD EPYC 7763 64-Core Processor",
+        "logicalCpus": 4,
+        "memoryBytes": 16759439360,
+        "freeMemoryBeforeBytes": 15106105344,
+        "k6Image": "grafana/k6@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276",
+        "mongoMaxPoolSize": 100
+      },
+      "revision": "cb05aca8e4fbadeddc91562a7ba04c6826a8b0c4",
+      "workingTreeDirty": false,
+      "dataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      },
+      "k6Version": "k6 v2.4.0 (commit/dd9395906d, go1.27.3, linux/amd64)",
+      "mongodb": "8.0.38",
+      "databaseSettings": {
+        "journalCommitIntervalMs": 10,
+        "majorityJournalDefault": true,
+        "replicaSetMembers": 1
+      },
+      "generatorExitCode": 0,
+      "result": {
+        "samples": 5855,
+        "validRate": 1,
+        "p95Ms": 59.7855462000001,
+        "participants": 100,
+        "measuredElapsedSeconds": 61.004749024000006,
+        "requestsPerSecond": 95.97613454153499,
+        "people": {
+          "min": 7.054615,
+          "avg": 29.69739240403008,
+          "med": 17.5193895,
+          "max": 403.914585,
+          "p(90)": 31.12574200000001,
+          "p(95)": 68.93914895,
+          "p(99)": 362.37733218000005,
+          "count": 2928
+        },
+        "teams": {
+          "min": 7.024921,
+          "avg": 30.407174287666578,
+          "med": 18.232716,
+          "max": 397.294854,
+          "p(90)": 32.63402280000001,
+          "p(95)": 57.29115369999969,
+          "p(99)": 364.0081517199994,
+          "count": 2927
+        }
+      },
+      "driverCommands": {
+        "aggregate:session:majority": {
+          "count": 6812,
+          "meanMs": 3.509101585437463,
+          "p95Ms": 19,
+          "maxMs": 56
+        },
+        "find:people:linearizable": {
+          "count": 6812,
+          "meanMs": 8.020551967116853,
+          "p95Ms": 21,
+          "maxMs": 66
+        },
+        "find:session:linearizable": {
+          "count": 6812,
+          "meanMs": 7.8505578391074575,
+          "p95Ms": 20,
+          "maxMs": 66
+        },
+        "find:events:snapshot": {
+          "count": 6812,
+          "meanMs": 3.1303581914268936,
+          "p95Ms": 18,
+          "maxMs": 60
+        },
+        "find:people:snapshot": {
+          "count": 3403,
+          "meanMs": 3.7196591243020865,
+          "p95Ms": 18,
+          "maxMs": 61
+        },
+        "commitTransaction:other:snapshot": {
+          "count": 6812,
+          "meanMs": 3.8377862595419847,
+          "p95Ms": 19,
+          "maxMs": 59
+        },
+        "find:teams:snapshot": {
+          "count": 3409,
+          "meanMs": 4.801994719859196,
+          "p95Ms": 19,
+          "maxMs": 64
+        }
+      },
+      "connectionPool": {
+        "peakCheckedOut": 59,
+        "checkoutFailures": 0,
+        "checkoutSamples": 40872,
+        "checkoutP95Ms": 1,
+        "checkoutMaxMs": 131
+      },
+      "eventLoop": {
+        "meanMs": 20.48888467989646,
+        "p95Ms": 21.774335,
+        "maxMs": 49.020927
+      },
+      "diagnostics": {},
+      "postRunDataset": {
+        "version": "board-dataset-v1",
+        "eventId": "d124631b-0d2f-46a4-9027-15ebf9c737c7",
+        "users": 10000,
+        "people": 10000,
+        "teams": 2000,
+        "unteamed": 5000,
+        "recruiting": 1500,
+        "incomplete": 500
+      }
+    }
+  }
+]

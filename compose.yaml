@@ -2,7 +2,7 @@ name: hack4hack-core
 services:
   mongo:
     image: mongo:8.0@sha256:d97fea17ccb8d004cd137be8dab54d70d0df11be69c9f422aefe4484c8414ab7
-    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--setParameter", "journalCommitInterval=10"]
     ports:
       - "127.0.0.1:27027:27017"
     volumes:
