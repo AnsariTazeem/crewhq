@@ -14,7 +14,12 @@ import {
 } from "mongodb";
 import { z, ZodError } from "zod";
 import type { AuthHttp } from "./auth.js";
-import { Membership, type HistoryCursor, type Event } from "./membership.js";
+import {
+  Membership,
+  type HistoryCursor,
+  type Event,
+  type Person,
+} from "./membership.js";
 import { Operations, type Intent } from "./operations.js";
 import { InviteLimiter } from "./invite-limiter.js";
 import { Discovery } from "./discovery.js";
@@ -30,7 +35,12 @@ import type { CommandReply } from "./operations.js";
 import { RateLimiterMongo, RateLimiterRes } from "rate-limiter-flexible";
 import { mountWeb } from "./web.js";
 
-type Actor = { id: string; name: string; expiresAt: Date };
+type Actor = {
+  id: string;
+  name: string;
+  expiresAt: Date;
+  participant?: Person;
+};
 type Dependencies = {
   auth: AuthHttp;
   db: Db;
@@ -197,7 +207,10 @@ export function createApp(options?: Dependencies) {
     }
     next();
   });
-  const identify = async (request: Request): Promise<Actor> => {
+  const identify = async (
+    request: Request,
+    participantEvent?: unknown,
+  ): Promise<Actor> => {
     let identity;
     try {
       identity = await options.auth.api.getSession({
@@ -213,14 +226,25 @@ export function createApp(options?: Dependencies) {
     }
     if (!identity || !ObjectId.isValid(identity.session.id))
       throw new ApiError(401, "UNAUTHENTICATED");
-    const current = await options.db.collection("session").findOne(
-      { _id: new ObjectId(identity.session.id) },
-      {
-        readConcern: { level: "linearizable" },
-        readPreference: "primary",
-        maxTimeMS: 1_000,
-      },
-    );
+    const parsedEvent = z.uuid().safeParse(participantEvent);
+    // These independent current-state reads use separate implicit sessions.
+    // Neither result authorizes a response until both checks have completed.
+    const [current, participant] = await Promise.all([
+      options.db.collection("session").findOne(
+        { _id: new ObjectId(identity.session.id) },
+        {
+          readConcern: { level: "linearizable" },
+          readPreference: "primary",
+          maxTimeMS: 1_000,
+        },
+      ),
+      parsedEvent.success
+        ? currentPerson(options.db, {
+            eventId: parsedEvent.data,
+            actorId: identity.user.id,
+          })
+        : undefined,
+    ]);
     if (
       !current ||
       !(current.expiresAt instanceof Date) ||
@@ -233,6 +257,7 @@ export function createApp(options?: Dependencies) {
       id: identity.user.id,
       name: identity.user.name,
       expiresAt: current.expiresAt,
+      ...(participant ? { participant } : {}),
     };
   };
   const authenticated =
@@ -242,9 +267,13 @@ export function createApp(options?: Dependencies) {
         response: express.Response,
         actor: Actor,
       ) => Promise<void>,
+      prefetchParticipant = false,
     ): RequestHandler =>
     async (request, response) => {
-      const actor = await identify(request);
+      const actor = await identify(
+        request,
+        prefetchParticipant ? request.params.eventId : undefined,
+      );
       const expectedActor = request.get("X-Actor-Id");
       if (expectedActor !== undefined && expectedActor !== actor.id)
         throw new ApiError(409, "ACTOR_CHANGED");
@@ -463,18 +492,19 @@ export function createApp(options?: Dependencies) {
       await project(
         request,
         response,
-        (context) =>
-          discovery.board(
-            {
-              eventId: z.uuid().parse(request.params.eventId),
-              actorId: actor.id,
-            },
-            query,
-            context,
-          ),
+        async (context) => {
+          const eventId = z.uuid().parse(request.params.eventId);
+          if (
+            !actor.participant ||
+            actor.participant.eventId !== eventId ||
+            actor.participant.userId !== actor.id
+          )
+            return { status: 403, body: { code: "NOT_ENROLLED" } };
+          return discovery.board(actor.participant, query, context);
+        },
         { key: JSON.stringify(query), actorId: actor.id },
       );
-    }),
+    }, true),
   );
   app.post(
     "/api/events/:eventId/teams/:teamId/profile",

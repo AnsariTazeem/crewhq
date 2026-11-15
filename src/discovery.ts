@@ -39,12 +39,12 @@ export class Discovery {
   }
 
   async board(
-    scope: Scope,
+    participant: Person,
     query: BoardQuery,
     read?: ProjectionRead,
   ): Promise<CommandReply> {
-    if (!(await currentPerson(this.db, scope)))
-      return { status: 403, body: { code: "NOT_ENROLLED" } };
+    // The HTTP boundary supplies its current, per-request enrollment read.
+    const scope = { eventId: participant.eventId };
     const event = await this.db
       .collection<Event>("events")
       .findOne({ _id: scope.eventId }, { ...read, maxTimeMS: 1_500 });
