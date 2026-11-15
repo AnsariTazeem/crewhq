@@ -12,7 +12,7 @@ A React and TypeScript workspace for event-based team formation. Find complement
 - Authenticated live refresh hints, signed read frontiers and reset/reconnect recovery.
 - Responsive participant, leader and team views with keyboard-operable dialogs and explicit invitation confirmation.
 
-The full seed dataset and hosted load-test results are not included. Google OAuth needs provider configuration and end-to-end verification. Hosted streaming and proxy behavior remain unverified; local correctness and browser tests do not establish production readiness.
+The synthetic seed and authenticated k6 workload are available; hosted load-test results are not established. Google OAuth needs provider configuration and end-to-end verification. Hosted streaming and proxy behavior remain unverified; local correctness and browser tests do not establish production readiness.
 
 ## Requirements
 
@@ -61,6 +61,8 @@ The suite uses signed test sessions and real MongoDB transactions. It covers per
 An ephemeral fault-injection database runs separately on `127.0.0.1:27028`. Only that test service enables database test commands. Run a single fault suite at a time, and never deploy the test override. Generated results stay in ignored `test-results/`.
 
 GitHub Actions runs formatting, typechecking, build and tests on pull requests and pushes to `main`. A workflow definition is not evidence of a successful remote run; inspect the checks for the exact commit being reviewed.
+
+See [seed and load testing](docs/load-testing.md) for the 10,000-user/2,000-team dataset, 100-user workload, strict gates and report limits.
 
 ## API conventions
 
