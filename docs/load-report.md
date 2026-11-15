@@ -46,17 +46,31 @@ All trials below used 100 participating users and returned 100% valid measured r
 
 PR runs execute GitHub's merge checkout; the retained reports record its complete SHA. Earlier runs are not all the same source tree. The final two rows have identical application trees. Shared-runner CPU models and timing vary, so these observations do not isolate a causal speedup or establish long-term stability. Earlier passing load jobs also do not imply their entire workflow passed: an uncertain-commit fixture cleanup failure was subsequently corrected.
 
+## Journal-interval configuration and subsequent trials
+
+The self-managed development/CI replica set now explicitly uses `journalCommitInterval=10` milliseconds. The original configuration used MongoDB's default interval. This changes journal scheduling and can increase storage I/O. Majority journal durability remains enabled, and the authentication guards, read concerns, transactions, workload and latency gate remain unchanged. Managed Atlas settings are unchanged.
+
+| Actions run | PR head | Samples | p95 (ms) | Entire workflow |
+|---|---|---:|---:|---|
+| [43716234399](https://github.com/AnsariTazeem/crewhq/actions/runs/43716234399) | `6d727a7` | 5,433 | 204.10 | Failed load gate |
+| [43739157853](https://github.com/AnsariTazeem/crewhq/actions/runs/43739157853) | `94d784a` | 5,900 | 71.15 | Load passed; formatting/browser jobs failed |
+| [43740517704](https://github.com/AnsariTazeem/crewhq/actions/runs/43740517704) | `51ee2bf` | 5,855 | 59.79 | All jobs passed |
+
+All three runs used 100 signed-in virtual users and returned 100% valid measured responses. The final run retained `journalCommitIntervalMs: 10`, `majorityJournalDefault: true` and one replica-set member. The runner records this configuration and rejects disabled majority journaling. It used four allocated Linux logical CPUs, Node v24.22.2 and MongoDB 8.0.38; the full report retains the hardware details. Shared-runner variation remains a confounder, so the differences are not an isolated estimate of the configuration's effect.
+
+The [tuned report](evidence/board-tuned-report.json) and [k6 summary](evidence/board-tuned-k6-summary.json) come from artifact `14171923783`, ZIP SHA-256 `eff5402ea484fc35aca69726fa7b029b3216839df55c1e604092b013be8852f2`. The report records GitHub's tested merge SHA `cb05aca8e4fbadeddc91562a7ba04c6826a8b0c4`. The retained trial collection now contains all twelve measurements, including the 204 ms failure. [MongoDB's journal parameter documentation](https://www.mongodb.com/docs/v8.0/reference/parameters/#mongodb-parameter-param.journalCommitInterval) describes the setting and its durability boundary.
+
 ## Retained evidence
 
 - [Main report](evidence/board-main-report.json) and [k6 summary](evidence/board-main-k6-summary.json), retained from artifact `14162245057`. Downloaded ZIP SHA-256: `5a15d5a3e7f3b696dfd43d6149bcad99f50919512a30640622706dc8b63d9114`.
 - [Pre-merge report](evidence/board-pr-report.json) and [k6 summary](evidence/board-pr-k6-summary.json), retained from artifact `14160858745`. ZIP SHA-256: `6a610f47a4d946bae3e8427e322ce5495e8cffb3a1c46f468212b615cf6a9e21`.
 - [Last-seat race result](evidence/last-seat-race.json), retained from the same main run's API artifact. This is separate correctness evidence, not a simultaneous write component of the board workload.
-- [All nine trial reports](evidence/board-trials.json), including failed Linux and exploratory Windows measurements, retain the complete reported environments, revisions and diagnostics.
+- [Trial reports](evidence/board-trials.json), including failed Linux and exploratory Windows measurements, retain the complete reported environments, revisions and diagnostics.
 
-The hashes identify the downloaded artifact ZIPs, not individual extracted JSON files. Actions artifacts expire after 14 days; the files linked here retain all nine trial reports and the two final k6 summaries beyond that retention window.
+The hashes identify the downloaded artifact ZIPs, not individual extracted JSON files. Actions artifacts expire after 14 days; the files linked here retain the trial reports and cited k6 summaries beyond that retention window.
 
 ## Interpretation limits
 
 k6 HTTP duration measures sending, waiting and receiving; it excludes initial DNS/TCP/TLS establishment and rendered UI latency. This closed-loop workload reduces request arrival rate as responses slow. External Google consent, concurrent membership writes, internet latency, multi-instance failover, sustained soak behavior, free-tier throttling and hosted SSE/proxy behavior are outside this result. Connection-pool and driver diagnostics include warm-up and are clues, not standalone causal explanations.
 
-Hosted deployment remains a separate acceptance check. In particular, a local/CI pass must not be represented as proof that a free database tier can sustain this workload.
+Hosted health, Google sign-in, event enrollment, team creation and a two-tab SSE update were checked separately at https://crewhq-mv4g.onrender.com. Render Free cold starts apply. These bounded checks do not show that the hosted free tiers sustain the benchmark workload; hosted saturation, proxy failure recovery and long-running availability remain unverified.

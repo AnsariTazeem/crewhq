@@ -12,7 +12,9 @@ A React and TypeScript workspace for event-based team formation. Find complement
 - Authenticated live refresh hints, signed read frontiers and reset/reconnect recovery.
 - Responsive participant, leader and team views with keyboard-operable dialogs and explicit invitation confirmation.
 
-The synthetic seed and authenticated k6 workload are available; the [load report](docs/load-report.md) records passing Linux measurements and earlier failed trials. Interactive sign-in requires a configured Google OAuth client. Google's consent/callback and session persistence have been checked locally. Hosted authentication, streaming and proxy behavior remain unverified; local correctness and browser tests do not establish production readiness.
+Try the [live workspace](https://crewhq-mv4g.onrender.com). The Render Free service may take about a minute to wake. Hosted health, Google sign-in, enrollment, team creation and two-tab live updates have been checked. The synthetic seed and authenticated k6 workload are available; the [load report](docs/load-report.md) records passing Linux measurements and earlier failed trials. These checks do not establish hosted capacity, high availability or production readiness.
+
+The [project overview](docs/submission.md) links the presentation, one-page design document and verification evidence.
 
 ## Requirements
 
