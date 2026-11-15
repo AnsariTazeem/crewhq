@@ -194,17 +194,26 @@ test("sign-out preserves an unconfirmed action for the same participant's next s
   page,
 }) => {
   await page.goto("/__test/login?user=recovery");
+  let markDropped!: () => void;
+  const responseDropped = new Promise<void>((resolve) => {
+    markDropped = resolve;
+  });
   await page.route(/\/api\/events\/[^/]+\/teams$/, async (route) => {
     await route.fetch();
     await route.abort("failed");
+    markDropped();
   });
   await page
     .getByRole("button", { name: "Create a team", exact: true })
     .click();
   await page.getByLabel("Team name").fill("Recovery Crew");
   await page.getByRole("button", { name: "Create team", exact: true }).click();
-  await page.getByRole("button", { name: "Review unconfirmed action" }).click();
+  await responseDropped;
+  // A live update may already have removed the create dialog. Escape also
+  // closes it when the lost-response feedback is still displayed there.
+  await page.keyboard.press("Escape");
   const pending = page.getByRole("region", { name: "Unconfirmed action" });
+  await expect(pending).toBeVisible();
   const key = await pending.locator("code").textContent();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(

@@ -195,7 +195,9 @@ try {
     replicaSetMembers: replica.config.members.length,
   };
   if (replica.config.writeConcernMajorityJournalDefault === false)
-    throw new BenchmarkFailure("Majority journal durability must remain enabled");
+    throw new BenchmarkFailure(
+      "Majority journal durability must remain enabled",
+    );
   // Session issuance is isolated from the served auth instance. No test routes exist on the target.
   const fixtureAuth = betterAuth({
     ...options,
