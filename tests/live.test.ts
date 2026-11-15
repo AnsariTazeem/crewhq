@@ -85,15 +85,67 @@ test("a refresh refetch reaches its signed minimum and confirms the authoritativ
       Buffer.from(String(hint.frontier).split(".")[0]!, "base64url").toString(),
     );
     const floor = new Timestamp({ t: decoded.t, i: decoded.i });
+    const snapshotStart = starts.find((command) => command.startTransaction);
+    expect(snapshotStart?.readConcern?.level).toBe("snapshot");
+    expect(snapshotStart?.readConcern?.afterClusterTime).toBeInstanceOf(
+      Timestamp,
+    );
+    expect(
+      snapshotStart!.readConcern.afterClusterTime.compare(floor),
+    ).toBeGreaterThanOrEqual(0);
     expect(
       starts.some(
         (command) =>
-          command.readConcern?.afterClusterTime instanceof Timestamp &&
-          command.readConcern.afterClusterTime.compare(floor) >= 0,
+          command.commitTransaction && command.writeConcern?.w === "majority",
       ),
     ).toBe(true);
+  } finally {
+    await stream.close();
+  }
+});
+
+test("current-only views still confirm the signed minimum before acknowledging it", async () => {
+  const eventId = await harness.event();
+  const viewer = await harness.person("Current view reader");
+  await harness.command(`/api/events/${eventId}/enroll`, viewer).expect(201);
+  const stream = await connectLive(
+    `${origin}/api/events/${eventId}/live`,
+    viewer.cookie,
+  );
+  try {
+    const ready = await stream.next("ready");
+    const commands: CommandStartedEvent["command"][] = [];
+    const capture = (event: CommandStartedEvent) => {
+      commands.push(event.command);
+    };
+    harness.client.on("commandStarted", capture);
+    let response;
+    try {
+      response = await harness
+        .get(`/api/events/${eventId}/me`, viewer)
+        .set("X-Read-Frontier", String(ready.frontier))
+        .expect(200);
+    } finally {
+      harness.client.off("commandStarted", capture);
+    }
+    expect(response.headers["x-read-frontier"]).toEqual(expect.any(String));
+    const snapshotStart = commands.find((command) => command.startTransaction);
+    expect(snapshotStart?.readConcern?.level).toBe("snapshot");
+    const decoded = JSON.parse(
+      Buffer.from(
+        String(ready.frontier).split(".")[0]!,
+        "base64url",
+      ).toString(),
+    );
+    const floor = new Timestamp({ t: decoded.t, i: decoded.i });
+    expect(snapshotStart?.readConcern?.afterClusterTime).toBeInstanceOf(
+      Timestamp,
+    );
     expect(
-      starts.some(
+      snapshotStart!.readConcern.afterClusterTime.compare(floor),
+    ).toBeGreaterThanOrEqual(0);
+    expect(
+      commands.some(
         (command) =>
           command.commitTransaction && command.writeConcern?.w === "majority",
       ),

@@ -145,7 +145,13 @@ export function createApp(options?: Dependencies) {
       return;
     }
     const eventId = z.uuid().parse(request.params.eventId);
-    const execute = () => liveReads.run(eventId, token, read);
+    const execute = () =>
+      liveReads.run(
+        eventId,
+        token,
+        read,
+        publicBoard ? "projection" : "barrier",
+      );
     let result;
     if (publicBoard && mode === "refresh") {
       // Authorization is per caller even when a safe public projection is shared.
